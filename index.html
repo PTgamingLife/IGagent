@@ -718,10 +718,32 @@ function getC(key){
   const[tid,sid]=key.split('+');
   const t=THEMES.find(x=>x.id===tid)||THEMES[0];
   const s=STYLES.find(x=>x.id===sid)||STYLES[0];
-  return{hook:`關於「${t.name}」的${s.name}視角`,structure:['建立核心觀點','分享個人實踐','給出可執行的下一步'],
-    script:`[開場]\n談到「${t.name}」，大多數人的第一反應是什麼？\n\n[核心]\n從${s.name}的角度切入，這件事的關鍵在於清楚的框架、真實的案例，以及一個你今天就能做的行動。\n\n[結尾]\n存起來，慢慢消化。`,
-    caption:`關於「${t.name}」，我想從${s.name}的角度分享一個觀察。`,
-    cta:['存起來 🔖','你有什麼看法？'],format:'Reels 或輪播',signal:'Saves + Comments'};
+  const tmplKey=sopTemplateForStyle(sid);
+  // Generate script using SOP structure based on style template
+  let hook,structure,script,caption,cta,signal;
+  if(tmplKey==='edu'){
+    hook=`${t.name}：你最需要知道的 3 件事`;
+    structure=['步驟一：釐清目標（你想解決什麼問題）','步驟二：核心方法（一個可立即執行的做法）','步驟三：確認結果（怎麼知道你做對了）'];
+    script=`[開場 0–8s]\n想用「${t.name}」？大多數人從第二步開始做，所以一直卡關。\n\n[問題 8–25s]\n問題是：沒有先搞清楚「你要解決什麼」，就算工具再強，結果還是亂的。\n\n[解法 25–50s]\n我的做法是三步——\n第一：先問自己今天最痛的一個問題是什麼。\n第二：針對這個問題，找最簡單的一個做法。\n第三：做完，確認有沒有解到那個痛點。\n\n[CTA 50–60s]\n這個步驟存起來，下次用「${t.name}」就從這裡開始。`;
+    caption=`用「${t.name}」，你從第幾步開始做？\n\n大多數人從第二步下手，所以一直卡。先釐清你要解決什麼，再找工具。這三步，我每次都用。`;
+    cta=['存起來 🔖','你現在卡在哪一步？'];
+    signal='Saves + Comments';
+  } else if(tmplKey==='fix'){
+    hook=`關於「${t.name}」，大部分人都做錯這一步`;
+    structure=['常見錯誤：忽略最關鍵的一個環節','錯誤代價：時間/效果的損耗','正確做法：一個立即可改的方法'];
+    script=`[開場 0–8s]\n大部分人在做「${t.name}」時都錯在同一個地方。\n\n[問題 8–30s]\n他們會直接跳進去做，沒有先確認方向對不對。\n這會導致：花了很多時間，但結果和預期差很遠。\n\n[解法 30–50s]\n你只要在開始前問自己一個問題：「這樣做，三個月後我會在哪？」\n答得出來，就繼續。答不出來，先停下來想清楚。\n\n[CTA 50–60s]\n這個思路存起來，下次開始前先問一遍。`;
+    caption=`做「${t.name}」，大部分人的問題不是不努力，是方向沒想清楚就衝了。\n\n三個月後你要在哪？這個問題，現在就問自己一遍。`;
+    cta=['有同感的按讚 👍','你遇過這個問題嗎？'];
+    signal='Shares + Comments';
+  } else {
+    hook=`你是不是也遇過「${t.name}」讓你卡住的那個問題？`;
+    structure=['痛點：大多數人遇到的真實困境','真正原因：不是你不夠努力，是方法對了嗎','改法：一個今天就能試的做法'];
+    script=`[開場 0–8s]\n你是不是也遇過：花了很多時間在「${t.name}」，但一直感覺沒什麼進展？\n\n[問題 8–30s]\n很多人以為是自己不夠努力。\n但真正問題是：我們在用忙碌感代替真正的進度。\n\n[解法 30–50s]\n最簡單的改法是：每天結束前，問自己一個問題——\n「今天這件事，讓我明天更容易還是更難？」\n答案會告訴你要不要繼續這樣做。\n\n[CTA 50–60s]\n這個問題，今晚問一次，存起來。`;
+    caption=`在「${t.name}」這件事上，你有沒有過：很忙，但感覺沒有進展？\n\n不是不夠努力，是忙碌感在騙你。今晚問自己：這件事讓我明天更容易還是更難？`;
+    cta=['這句話存起來 💡','留言說說你的狀況'];
+    signal='Saves + DMs';
+  }
+  return{hook,structure,script,caption,cta,format:'Reels',signal};
 }
 
 // ─── SEED RANDOM ───
@@ -737,6 +759,86 @@ function pickTopics(){
   }
   while(picked.length<3){const k=keys[picked.length];if(!picked.includes(k))picked.push(k);}
   return picked.slice(0,3);
+}
+
+// ─── SOP FRAMEWORK ───
+// 7-step script editing SOP for spoken IG content
+const SOP={
+  templates:{
+    pain:`「你是不是也遇過 ___。
+很多人以為原因是 ___，
+但真正問題其實是 ___。
+最簡單的改法是 ___。」`,
+    fix:`「大部分人做 ___ 都錯在 ___。
+這會導致 ___。
+你只要改成 ___，效果就會明顯不同。」`,
+    edu:`「如果你想要 ___，先做這三步：
+第一 ___。
+第二 ___。
+第三 ___。」`
+  },
+  // Map content style to SOP template
+  styleTemplate:{
+    action:'edu', list:'edu', data:'edu',
+    story:'pain', motivation:'pain',
+    contrarian:'fix','anti-guru':'fix'
+  },
+  steps:[
+    {n:1,title:'定唯一目標',tip:'用一句話寫出這支影片只講一件事'},
+    {n:2,title:'分 4 段結構',tip:'開頭 hook → 問題情境 → 核心解法 → 單一 CTA'},
+    {n:3,title:'開頭直接給結果',tip:'刪掉自介與背景，前 3 秒說出痛點或結果'},
+    {n:4,title:'長句改短口語',tip:'每句一個意思，適合直接唸出來，沒有書面語'},
+    {n:5,title:'中段用「問題→原因→解法」',tip:'問題（觀眾現象）→ 原因（為什麼）→ 解法（可執行）'},
+    {n:6,title:'加入節奏變化',tip:'反問、轉折詞、重點重讀，每隔幾句有一次停頓'},
+    {n:7,title:'結尾只做一件事',tip:'只留一個 CTA，不同時塞感謝、總結、延伸'}
+  ],
+  checklist:{
+    structure:['只講一個主題','前 3 秒直接給痛點/衝突/結果','中段有清楚問題與解法','結尾只有一個 CTA'],
+    language:['每句夠短，適合唸出來','沒有書面語或學術腔','重要詞有自然停頓'],
+    attention:['開頭沒有自介或背景鋪陳','中段沒有大量陳述','每隔幾句有節奏變化']
+  }
+};
+
+function sopTemplateForStyle(sid){
+  return SOP.styleTemplate[sid]||'pain';
+}
+
+function renderSOPCard(c, sid){
+  const tmplKey=sopTemplateForStyle(sid);
+  const tmplName={pain:'痛點型',fix:'錯誤修正型',edu:'教學型'}[tmplKey];
+  const tmpl=SOP.templates[tmplKey];
+  const steps=SOP.steps.map(s=>`
+    <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="background:var(--accent);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;margin-top:2px">${s.n}</div>
+      <div><div style="font-size:.83rem;font-weight:600">${s.title}</div><div style="font-size:.75rem;color:var(--muted);margin-top:2px">${s.tip}</div></div>
+    </div>`).join('');
+  const chk=(items,label)=>items.map(i=>`<div style="font-size:.75rem;padding:3px 0;color:var(--muted)">☐ ${i}</div>`).join('');
+  return`<div class="card" id="sop-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleSOP()">
+      <div class="section-title" style="margin-bottom:0">📋 SOP 腳本框架 <span style="font-size:.7rem;font-weight:400;color:var(--accent)">${tmplName}</span></div>
+      <span id="sop-toggle" style="color:var(--muted);font-size:.8rem">展開 ▾</span>
+    </div>
+    <div id="sop-body" style="display:none;margin-top:12px">
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:8px">建議套用模板</div>
+      <div class="script-box" style="font-size:.8rem;white-space:pre-wrap;margin-bottom:12px">${tmpl}</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">7 步驟流程</div>
+      ${steps}
+      <div style="margin-top:12px;background:var(--surface2);border-radius:8px;padding:10px">
+        <div style="font-size:.75rem;color:var(--accent);font-weight:600;margin-bottom:6px">拍攝前檢查</div>
+        <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">內容結構</div>
+        ${chk(SOP.checklist.structure)}
+        <div style="font-size:.72rem;color:var(--muted);margin:6px 0 4px;text-transform:uppercase;letter-spacing:.3px">語言表達</div>
+        ${chk(SOP.checklist.language)}
+        <div style="font-size:.72rem;color:var(--muted);margin:6px 0 4px;text-transform:uppercase;letter-spacing:.3px">留存注意力</div>
+        ${chk(SOP.checklist.attention)}
+      </div>
+    </div>
+  </div>`;
+}
+function toggleSOP(){
+  const b=id('sop-body'),t=id('sop-toggle');
+  if(b.style.display==='none'){b.style.display='block';t.textContent='收起 ▴';}
+  else{b.style.display='none';t.textContent='展開 ▾';}
 }
 
 // ─── STYLE ANALYSIS ───
@@ -857,22 +959,23 @@ function openDetail(key){
     <div class="card"><div class="section-title">🎯 Hook（開場勾子）</div><div class="hook-box">${c.hook}</div></div>
     <div class="card">
       <div class="section-title">🎙️ 一分鐘口播腳本</div>
-      <div class="timing">⏱ 約 60 秒 · 建議語速 150 字／分</div>
+      <div class="timing">⏱ 約 60 秒 · 建議語速 150 字／分 · 結構：開頭→問題→解法→CTA</div>
       <div class="script-box">${c.script}</div>
     </div>
-    <div class="card"><div class="section-title">📐 內容結構</div><ol class="structure">${c.structure.map(x=>`<li>${x}</li>`).join('')}</ol></div>
+    <div class="card"><div class="section-title">📐 內容結構（SOP 步驟 2）</div><ol class="structure">${c.structure.map(x=>`<li>${x}</li>`).join('')}</ol></div>
+    ${renderSOPCard(c, sid)}
     <div class="card"><div class="section-title">📝 Caption 草稿</div><div class="caption-box">${c.caption}</div></div>
     <div class="card">
-      <div class="section-title">📢 CTA 選項</div>
+      <div class="section-title">📢 CTA 選項（只選一個）</div>
       <div class="cta-row">${c.cta.map(x=>`<div class="cta-pill">${x}</div>`).join('')}</div>
       <div style="margin-top:10px"><span class="tag tag-g">演算法目標：${c.signal}</span></div>
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:.83rem;color:var(--muted)">✏️ 修改後系統學習你的語氣</span>
+        <span style="font-size:.83rem;color:var(--muted)">✏️ 依 SOP 改寫 → 系統學習你的語氣</span>
         <span class="save-ok" id="save-ok">已儲存 ✓</span>
       </div>
-      <textarea class="ea" id="edit-area" placeholder="複製上方腳本或 Caption，修改成你自己的語氣…">${saved}</textarea>
+      <textarea class="ea" id="edit-area" placeholder="依上方 SOP 框架改寫腳本：&#10;1. 開頭直接給痛點（前 3 秒）&#10;2. 中段：問題→原因→解法&#10;3. 短句口語，有節奏停頓&#10;4. 結尾只留一個 CTA">${saved}</textarea>
       <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveEdit()">儲存修改</button>
     </div>`;
   id('detail-overlay').classList.add('open');
