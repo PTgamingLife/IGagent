@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IG Agent · ailifeu</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#0f0f13;--surface:#1a1a24;--surface2:#24243a;
+  --accent:#7c6af7;--accent2:#f97b6b;--green:#4ade80;
+  --text:#e8e8f0;--muted:#888;--border:#2e2e44;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+
+/* ── Auth ── */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:36px 32px;width:100%;max-width:380px}
+.auth-card h1{font-size:1.4rem;margin-bottom:6px}
+.auth-card p{color:var(--muted);font-size:.85rem;margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px 14px;font-size:.9rem;font-family:inherit}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:80px}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.85}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);margin-top:10px}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{width:auto;padding:8px 18px;font-size:.85rem}
+.err{color:var(--accent2);font-size:.8rem;margin-top:10px;text-align:center;min-height:18px}
+
+/* ── App shell ── */
+#app{display:none;min-height:100vh;flex-direction:column}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:16px}
+.topbar .logo{font-weight:700;font-size:1rem;color:var(--accent);flex:1}
+.topbar .handle{font-size:.8rem;color:var(--muted)}
+.topbar .signout{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:4px 8px;border-radius:6px}.topbar .signout:hover{color:var(--accent2)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:10}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer;color:var(--muted);font-size:.7rem;gap:4px;transition:color .15s}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-item.active{color:var(--accent)}
+.page-wrap{flex:1;overflow-y:auto;padding:20px 16px 80px;max-width:820px;margin:0 auto;width:100%}
+
+/* ── Common ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card h2{font-size:1rem;margin-bottom:4px}
+.card .sub{font-size:.8rem;color:var(--muted);margin-bottom:16px}
+.section-title{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;font-weight:600}
+.tag{background:#2a2a3e;border-radius:20px;padding:3px 10px;font-size:.75rem;font-weight:600}
+.tag-a{color:var(--accent)}.tag-o{color:var(--accent2)}.tag-g{color:var(--green)}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.pill-group{display:flex;flex-wrap:wrap;gap:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.grid2{grid-template-columns:1fr}}
+.info-box{background:var(--surface2);border-radius:10px;padding:12px}
+.info-box .lb{font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.info-box .vl{font-size:.9rem;line-height:1.5}
+.profile-header{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.avatar{width:52px;height:52px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:700;flex-shrink:0}
+
+/* ── Topics ── */
+.topic-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:border-color .15s,transform .1s;margin-bottom:12px}
+.topic-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.topic-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.topic-hook{font-size:1rem;font-weight:600;line-height:1.5}
+.regen-btn{width:100%;padding:11px;background:transparent;border:1px dashed var(--border);border-radius:10px;color:var(--muted);cursor:pointer;font-size:.85rem;transition:all .15s;margin-top:4px}
+.regen-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── Detail overlay ── */
+#detail-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:20;overflow-y:auto;padding:20px 16px 80px}
+#detail-overlay.open{display:block}
+.detail-inner{max-width:820px;margin:0 auto}
+.detail-back{display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;margin-bottom:16px;padding:4px 0}
+.detail-back:hover{color:var(--text)}
+.hook-box{background:var(--surface2);border-left:3px solid var(--accent);padding:14px 16px;border-radius:0 8px 8px 0;font-size:1rem;font-weight:600;line-height:1.5}
+.structure{counter-reset:step;list-style:none}
+.structure li{counter-increment:step;display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.88rem;line-height:1.5}
+.structure li:last-child{border-bottom:none}
+.structure li::before{content:counter(step);background:var(--accent);color:#fff;width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.script-box{background:#1a1a2e;border:1px solid #3d2a5e;border-radius:10px;padding:16px;font-size:.88rem;line-height:1.9;white-space:pre-wrap}
+.timing{font-size:.75rem;color:#b89af7;margin-bottom:8px}
+.caption-box{background:var(--surface2);border-radius:8px;padding:14px;font-size:.88rem;line-height:1.7;white-space:pre-wrap}
+.cta-row{display:flex;gap:8px;flex-wrap:wrap}
+.cta-pill{background:#2a2a3e;border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:.82rem}
+.save-ok{color:var(--green);opacity:0;transition:opacity .3s;font-size:.78rem}
+.save-ok.show{opacity:1}
+textarea.ea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:12px;font-size:.88rem;line-height:1.6;resize:vertical;min-height:120px;font-family:inherit}
+textarea.ea:focus{outline:none;border-color:var(--accent)}
+
+/* ── Advice ── */
+.perf-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.perf-form{grid-template-columns:1fr}}
+.mi label{font-size:.75rem;color:var(--muted);display:block;margin-bottom:4px}
+.mi input,.mi select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:.9rem;font-family:inherit}
+.advice-card{background:linear-gradient(135deg,#1e1a3a,#2a1a2e);border:1px solid #3d2a5e;border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.advice-card h3{font-size:.85rem;color:#b89af7;margin-bottom:8px}
+.advice-card ul{list-style:none}
+.advice-card ul li{font-size:.85rem;padding:3px 0;line-height:1.6}
+.advice-card ul li::before{content:"→ ";color:var(--accent)}
+.bm-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.bm-table th{text-align:left;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border);font-weight:600}
+.bm-table td{padding:7px 8px;border-bottom:1px solid var(--border)}
+.bm-table tr:last-child td{border-bottom:none}
+.good{color:var(--green)}.warn{color:#f6c90e}.bad{color:var(--accent2)}
+.ph-item{background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px;font-size:.83rem}
+.ph-meta{color:var(--muted);font-size:.75rem;margin-bottom:6px;display:flex;gap:10px;flex-wrap:wrap}
+.ph-metrics{display:flex;gap:12px;flex-wrap:wrap}
+.pm .v{font-weight:700;font-size:.95rem}.pm .k{font-size:.68rem;color:var(--muted);text-align:center}
+.empty{text-align:center;color:var(--muted);padding:32px 16px;font-size:.88rem}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.85rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100;white-space:nowrap}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <h1>IG Agent 🤖</h1>
+    <p>你的 IG 內容工廠 · 登入開始使用</p>
+    <div class="form-group"><label>Email</label><input type="email" id="au-email" placeholder="you@example.com"></div>
+    <div class="form-group"><label>密碼</label><input type="password" id="au-pw" placeholder="••••••••"></div>
+    <div class="err" id="au-err"></div>
+    <button class="btn btn-primary" onclick="doLogin()">登入</button>
+    <button class="btn btn-ghost" onclick="doRegister()">還沒有帳號？註冊</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">IG Agent</div>
+    <span class="handle" id="top-handle"></span>
+    <button class="signout" onclick="doSignOut()">登出</button>
+  </div>
+  <div class="page-wrap" id="page-profile" style="display:none"></div>
+  <div class="page-wrap" id="page-topics"  style="display:none"></div>
+  <div class="page-wrap" id="page-advice"  style="display:none"></div>
+  <nav class="bottom-nav">
+    <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>定位
+    </div>
+    <div class="nav-item" id="nav-topics" onclick="showPage('topics')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>每日主題
+    </div>
+    <div class="nav-item" id="nav-advice" onclick="showPage('advice')">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>流量建議
+    </div>
+  </nav>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div id="detail-overlay">
+  <div class="detail-inner">
+    <button class="detail-back" onclick="closeDetail()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>返回主題
+    </button>
+    <div id="detail-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── SUPABASE ───
+const sb = supabase.createClient(
+  'https://hhcubvixldieuwdeqnwc.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoY3Vidml4bGRpZXV3ZGVxbndjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NjcyNDYsImV4cCI6MjA5MTE0MzI0Nn0.zkWxfm0FugSEL9zW6pwDFWPqmRJ3ystOZfU8yRL2lPo'
+);
+
+let currentUser=null, userProfile=null, styleRecords={}, perfData=[], regenCount=0, currentTopicKey=null;
+
+// ─── AUTH ───
+async function doLogin(){
+  const {error}=await sb.auth.signInWithPassword({email:v('au-email'),password:v('au-pw')});
+  if(error) id('au-err').textContent=error.message;
+}
+async function doRegister(){
+  const pw=v('au-pw');
+  if(pw.length<6){id('au-err').textContent='密碼至少 6 碼';return;}
+  const {error}=await sb.auth.signUp({email:v('au-email'),password:pw});
+  id('au-err').textContent=error?error.message:'✅ 請查收確認信！';
+}
+async function doSignOut(){ await sb.auth.signOut(); location.reload(); }
+
+sb.auth.onAuthStateChange(async(_,session)=>{
+  if(session?.user){
+    currentUser=session.user;
+    await loadData();
+    id('auth-screen').style.display='none';
+    id('app').style.display='flex';
+    showPage('topics');
+  } else {
+    id('auth-screen').style.display='flex';
+    id('app').style.display='none';
+  }
+});
+
+async function loadData(){
+  const uid=currentUser.id;
+  const[{data:prof},{data:sty},{data:perf}]=await Promise.all([
+    sb.from('ig_profiles').select('*').eq('user_id',uid).single(),
+    sb.from('ig_style_records').select('*').eq('user_id',uid),
+    sb.from('ig_performance').select('*').eq('user_id',uid).order('post_date',{ascending:false}).limit(30)
+  ]);
+  userProfile=prof;
+  styleRecords={};(sty||[]).forEach(r=>{styleRecords[r.topic_key]=r.edited_text;});
+  perfData=perf||[];
+  if(prof?.ig_handle) id('top-handle').textContent='@'+prof.ig_handle;
+}
+
+// ─── NAV ───
+function showPage(name){
+  ['profile','topics','advice'].forEach(p=>{
+    id('page-'+p).style.display=p===name?'block':'none';
+    id('nav-'+p).classList.toggle('active',p===name);
+  });
+  if(name==='profile') renderProfile();
+  if(name==='topics')  renderTopics();
+  if(name==='advice')  renderAdvice();
+}
+
+// ─── CONTENT DATA ───
+const THEMES=[
+  {id:'ai-tools', name:'AI 工具實測',    emoji:'🤖'},
+  {id:'workflow', name:'工作流程自動化',  emoji:'⚡'},
+  {id:'health',   name:'健康管理 × 科技', emoji:'🏥'},
+  {id:'dad-life', name:'中年工程師奶爸',  emoji:'👨‍👧'},
+  {id:'ai-edu',   name:'AI 教學入門',     emoji:'📚'},
+  {id:'anti-guru',name:'破解 AI 迷思',    emoji:'🔥'},
+];
+const STYLES=[
+  {id:'action',     name:'行動指南',tag:'方法型'},
+  {id:'story',      name:'故事型',  tag:'共鳴型'},
+  {id:'contrarian', name:'反向思考',tag:'反骨型'},
+  {id:'data',       name:'數據分析',tag:'數據型'},
+  {id:'list',       name:'清單收藏',tag:'工具型'},
+  {id:'motivation', name:'動機激勵',tag:'心態型'},
+];
+
+const CM={
+'ai-tools+action':{
+  hook:'3 個步驟，讓你花 5 分鐘搞懂一個新 AI 工具',
+  structure:['先問它「你能幫我做什麼？」—讓 AI 自我介紹，省 80% 摸索時間','給它你的真實情境，看它能不能解決你「今天的問題」','找它的邊界：故意問超綱，了解限制，避免誤用'],
+  script:`[開場 0–10s]
+你有沒有花了三天試一個 AI 工具，還是搞不清楚它到底能做什麼？
+
+[問題 10–25s]
+問題不在工具難用，在於我們根本沒有「快速上手的框架」。
+
+[解法 25–50s]
+我的方法是三步——
+第一步，讓它自介：問它「你最擅長幫我做什麼？」
+第二步，給真實情境：用你今天真正遇到的問題測試它。
+第三步，找它的極限：故意問超綱，知道它在哪裡不行。
+
+[結尾 50–60s]
+10 分鐘，就能判斷這個工具值不值得繼續用。存起來，下次試新工具就用這個。`,
+  caption:`你有沒有試過一個 AI 工具，用了三天卻完全搞不清楚它到底能做什麼？
+
+後來我發現：問題不在工具難用，在於我們根本沒有「快速上手的框架」。
+
+現在每次遇到新工具，我都用這 3 步驟——存起來下次用。`,
+  cta:['儲存起來下次用 🔖','你最近試了什麼 AI 工具？'],
+  format:'輪播貼文',signal:'Saves'
+},
+'ai-tools+contrarian':{
+  hook:'停止追 AI 工具。它正在讓你的效率越來越差',
+  structure:['迷思：工具越多 = 越有生產力','真相：工具切換成本每天吃掉你 90 分鐘','更好的做法：先確認痛點，再找工具'],
+  script:`[開場 0–8s]
+我說一個可能讓你不舒服的觀察——追 AI 工具最積極的人，往往生產力最低。
+
+[核心 8–35s]
+不是因為工具不好，是因為他們在用「找工具」這個行為逃避真正的工作。
+我做了個實驗：一個月內把工具從十幾個砍到四個。結果反而多完成了 30% 的任務。
+
+[原因 35–50s]
+原因很簡單——工具切換有隱性成本。每次切換，大腦要重新進入狀態。
+
+[結尾 50–60s]
+工具是解法，不是目標。先搞清楚你要解決什麼問題，再找工具。`,
+  caption:`追 AI 工具最積極的人，往往生產力最低。
+
+不是因為工具不好，是因為他們在用「找工具」這個行為逃避真正的工作。
+
+工具是解法，不是目標。`,
+  cta:['你同意嗎？留言開戰 👇','轉發給每天推薦新工具的朋友 😅'],
+  format:'Reels',signal:'Shares + Comments'
+},
+'ai-tools+story':{
+  hook:'我花了 3 個月試了 27 個 AI 工具，最後只留下 4 個',
+  structure:['痛點：每週花 6 小時寫內容，身心俱疲','踩雷：大多數推薦工具用一次就刪','轉折：工具好不好用取決於能否融入工作流','最後留下的 4 個工具'],
+  script:`[開場 0–10s]
+三個月，我試了 27 個 AI 工具。最後只留下 4 個。
+
+[故事 10–35s]
+剛開始的我，每個月都在追新工具。什麼大師推薦，就去試什麼。
+結果桌面一堆 App，工作流反而更混亂。
+直到我開始用一個標準：這個工具能幫我省超過 30 分鐘嗎？通不過就砍。
+
+[轉折 35–50s]
+砍完之後，剩下 4 個。這 4 個，每天都在用，每天都省時間。
+
+[結尾 50–60s]
+留下來的工具，不是最強的，是最適合你工作流的。`,
+  caption:`老實說，我剛開始用 AI 工具的時候，每個月都在追新工具。結果桌面一堆 App，工作流更混亂。
+
+直到我用一個標準篩選：「這個工具能幫我省超過 30 分鐘嗎？」通不過就砍。
+
+最後留下來的 4 個，每天都在用。`,
+  cta:['留言告訴我你最離不開哪個','分享給也在追工具的朋友 👥'],
+  format:'Reels 或輪播',signal:'DMs + Shares'
+},
+'ai-tools+data':{
+  hook:'90% 的人不知道：AI 工具有效率提升，數字到底是多少？',
+  structure:['研究數據：有系統使用 AI 每週平均省 4.2 小時','投報率最高的工具類別','最多人低估的隱性時間成本'],
+  script:`[開場 0–10s]
+有沒有人真的算過：用 AI 工具到底省了多少時間？
+
+[數據 10–35s]
+研究顯示，有系統使用 AI 工具的工作者，平均每週省下 4.2 小時。
+聽起來不多？一年就是 218 小時——將近 9 天的時間。
+但同一份研究也發現：只有 23% 的人達到這個水準。其他人其實沒省多少。
+
+[關鍵 35–50s]
+差距在哪？在於有沒有「系統性地用」，而不是隨機亂試。
+
+[結尾 50–60s]
+問題不是 AI 能省時嗎，而是你有沒有在系統性地用它。`,
+  caption:`數字不會說謊，但我們常常忽略數字。
+
+研究顯示有系統使用 AI 的工作者，平均每週省 4.2 小時——一年將近 9 天。
+
+問題不是「AI 能省時嗎」，而是「你有沒有在系統性地用它」。`,
+  cta:['收藏這個數據 📊','你每週大概省了幾小時？'],
+  format:'輪播貼文',signal:'Saves + Shares'
+},
+'ai-tools+list':{
+  hook:'每個 AI 工具控必備的 7 個評測框架（付費前先問這些）',
+  structure:['問題 1：免費版夠不夠你用？','問題 2：能不能融入現有工作流？','問題 3：退出成本有多高？','問題 4：它在哪裡不行？'],
+  script:`[開場 0–8s]
+付費 AI 工具之前，我都會問自己這 7 個問題。避免我再次浪費訂閱費。
+
+[清單 8–45s]
+第一：這個工具解決的問題，我每週至少遇到幾次？少於 3 次，不值得付費。
+第二：免費版夠用嗎？很多工具免費版已經足夠 80% 的使用情境。
+第三：能不能融入我現有的工作流？要換工作流才能用的工具，通常用不長久。
+第四：退出成本有多高？我的資料會不會被鎖死在這個平台？
+到這邊先停——這四個問題，能過濾掉 70% 的衝動訂閱。
+
+[結尾 45–60s]
+存起來，下次你遇到「要不要買」的時刻就用得到。`,
+  caption:`付費 AI 工具之前，我都會問自己這 7 個問題。
+
+避免我再次浪費訂閱費。
+
+存起來，下次你遇到「要不要買」的時刻就用得到。`,
+  cta:['存起來備用 🔖','你有自己的評估方式嗎？'],
+  format:'輪播貼文',signal:'Saves'
+},
+'ai-tools+motivation':{
+  hook:'你不缺 AI 工具，你缺的是一套「使用哲學」',
+  structure:['工具焦慮的根源：資訊過載 + FOMO','觀念轉換：你是工具的主人，不是工具的學生','建立個人 AI Stack 的心態框架'],
+  script:`[開場 0–8s]
+有時候，我看著電腦裡一堆 AI 工具，突然有點迷失——到底是工具幫我，還是我在幫工具？
+
+[核心 8–40s]
+真正有效率的人，用的工具不多，但用得很深。
+不是拒絕新工具，而是先把手上的用到極致。
+這背後是一個使用哲學：工具是你的延伸，不是你的方向。
+你知道自己要去哪，再找工具幫你去得更快。
+不知道自己要去哪，再多工具只會讓你更迷失。
+
+[結尾 40–60s]
+不是拒絕新工具，是先把手上的用到極致。`,
+  caption:`有時候，我看著自己電腦裡一堆 AI 工具，突然有點迷失。
+
+到底是工具幫我，還是我在幫工具？
+
+真正有效率的人用的工具不多，但用得很深。`,
+  cta:['這句話存起來 💡','你目前主力在用哪個工具？'],
+  format:'純文字 Reel 或單圖',signal:'Saves + DMs'
+},
+'workflow+action':{
+  hook:'5 個可以今天就開始的工作自動化（不用寫程式）',
+  structure:['自動整理 Gmail 分類標籤','會議記錄自動轉成行動清單','社群貼文排程批次設定','重複回覆用 AI 範本秒回','每週報告自動彙整'],
+  script:`[開場 0–8s]
+我曾經每天花兩小時在「重複做同一件事」。現在這兩小時幫我自動完成了。
+
+[核心 8–45s]
+不是我變聰明，是我懶對了方向。今天分享 5 個不需要寫程式就能做到的自動化：
+一、Gmail 自動分類——不用再手動整理信件。
+二、會議記錄轉行動清單——Otter 加 AI 摘要，開完會就有任務清單。
+三、社群貼文批次排程——一次設定，一週搞定。
+四、重複性回覆用 AI 範本——節省 50% 溝通時間。
+五、每週報告自動彙整——再也不用每週五加班。
+
+[結尾 45–60s]
+這五個我都在用，每個設定時間不超過 10 分鐘。存起來，這週選一個先試。`,
+  caption:`我曾經每天花 2 小時在「重複做同一件事」。現在這 2 小時已經幫我自動完成了。
+
+不是我變聰明，是我懶對了方向。
+
+這 5 個自動化，都不需要寫一行程式。存起來週末試試看。`,
+  cta:['存起來週末試試看 🔖','你最想自動化哪一個？'],
+  format:'輪播貼文',signal:'Saves'
+},
+'workflow+contrarian':{
+  hook:'停止用 Todo List。它是你效率低落的罪魁禍首',
+  structure:['Todo List 的陷阱：感覺努力，沒移動重要的事','真正問題：管理「任務」而非「時間區塊」','替代方案：時間封鎖 + AI 排程助理'],
+  script:`[開場 0–8s]
+我用 Todo List 用了五年，越用越焦慮。
+
+[問題 8–30s]
+每天劃掉的項目越多，清單反而越長。
+後來我才發現問題：我在管理「什麼要做」，卻完全沒有管理「什麼時候做」。
+一個沒有時間框的任務，永遠都是未完成狀態。
+
+[解法 30–50s]
+我換成時間封鎖法：不是列清單，是把任務直接排進行事曆。
+加上 AI 幫我排優先順序——現在我的一天從「清單焦慮」變成「可預測的時間地圖」。
+
+[結尾 50–60s]
+兩行字的清單，不如一個時間封鎖。試試看。`,
+  caption:`我用 Todo List 用了 5 年，越用越焦慮。每天劃掉的越多，清單反而越長。
+
+後來我才發現問題：我在管理「什麼要做」，卻完全沒有管理「什麼時候做」。`,
+  cta:['你還在用 Todo List 嗎？','分享給也有清單焦慮的朋友'],
+  format:'Reels',signal:'Shares + Comments'
+},
+'workflow+story':{
+  hook:'我廁所錄影片的原因，不是我懶，是我只有那 3 分鐘',
+  structure:['現實：工程師奶爸的時間只有碎片','解法：把工作流壓縮到最小可執行單位','系統：哪些事可以廁所時間完成'],
+  script:`[開場 0–8s]
+老婆問我為什麼一直在廁所那麼久——因為那是我唯一不被打擾的 3 分鐘。
+
+[展開 8–40s]
+我的很多影片草稿，都是廁所時間完成的。不是開玩笑。
+帶小孩之後，我再也沒有整塊的時間了。
+所以我開始思考：哪些事可以在 3 分鐘內完成一個有意義的進度？
+語音輸入草稿——可以。快速回覆 DM——可以。
+決定明天最重要一件事——可以。
+
+[結論 40–60s]
+有效率不是你有很多時間，是你把僅有的時間用到極致。
+如果你也在碎片時間掙扎，留言告訴我，我有一套碎片工作流可以分享給你。`,
+  caption:`老婆問我為什麼一直在廁所那麼久。因為那是我唯一不被打擾的 3 分鐘。
+
+不是開玩笑，我的很多影片草稿都是廁所時間完成的。`,
+  cta:['廁所黨舉手 🙋','分享給跟我一樣忙的爸媽'],
+  format:'Reels',signal:'Shares + DMs'
+},
+'health+contrarian':{
+  hook:'停止計算卡路里。對大多數人來說，它根本沒有用',
+  structure:['迷思：卡路里計算 = 健康管理','真相：熱量品質比數量更重要','更有效方案：血糖曲線 + 飲食時序'],
+  script:`[開場 0–8s]
+我是健康管理師，但我從來不叫病人算卡路里。
+
+[核心 8–35s]
+不是因為算錯，是因為算了也沒用。
+兩種食物熱量一樣，但對你血糖的影響可以差三倍。
+血糖一波動，飢餓感就失控，接著過量飲食——
+然後你說「我明明算了卡路里，怎麼還是沒效？」
+問題不在計算，在你算的東西根本沒有抓到關鍵。
+
+[解法 35–52s]
+真正有效的，是管理血糖曲線：先吃蔬菜蛋白質，再吃澱粉。
+飲食順序這一件事，比計算一百個卡路里更有效。
+
+[結尾 52–60s]
+這是北醫健康管理的核心概念，不是我自創的。如果你想了解更多，存起來。`,
+  caption:`我是健康管理師，但我從來不叫病人算卡路里。
+
+不是因為算錯，是因為算了也沒用。
+
+減重真正的關鍵是血糖的穩定，不是熱量的計算。這兩件事不一樣。`,
+  cta:['這個觀點你同意嗎？','分享給還在算卡路里的朋友'],
+  format:'Reels',signal:'Shares + Comments'
+},
+'health+story':{
+  hook:'我媽媽被診斷糖尿病那天，我才認真去念了健康管理',
+  structure:['觸發點：家人健康危機','過程：工程師跨領域讀北醫健康管理','轉折：用 AI 設計個人化健康方案','成果：媽媽血糖第一個月就改善'],
+  script:`[開場 0–10s]
+我不是從小就對健康有熱情的人。我本來只是個普通工程師。
+
+[故事 10–35s]
+直到我媽媽被診斷出糖尿病。那一刻我才意識到：
+我有能力幫她，但我沒有知識。所以我去讀了健康管理。
+在北醫的課程裡，我學到了很多顛覆認知的東西——
+關於血糖、關於代謝、關於為什麼努力運動卻瘦不下來的真相。
+
+[轉折 35–52s]
+後來我把這些知識結合 AI 工具，幫我媽設計個人化飲食計畫。
+第一個月，她的血糖數值就有明顯改善。
+
+[結尾 52–60s]
+現在我把這些知識和工具分享出來，希望讓更多人少走彎路。身邊有需要的人，歡迎分享給他們。`,
+  caption:`我不是從小就對健康有熱情的人。我本來只是個普通的工程師，直到我媽媽被診斷出糖尿病。
+
+那一刻我才意識到：我有能力幫她，但我沒有知識。所以我去讀了。`,
+  cta:['你身邊有需要這些資訊的人嗎？','DM 我，我把相關資源整理給你'],
+  format:'輪播 or Reels',signal:'DMs + Saves'
+},
+'health+data':{
+  hook:'我追蹤了 90 天睡眠數據：影響隔天效率最大的不是睡眠時間',
+  structure:['追蹤方法：HRV、深睡比例、入睡時間','意外發現：7 小時淺眠 < 6 小時深睡','影響深睡的三個關鍵行為'],
+  script:`[開場 0–10s]
+我以為睡夠 8 小時就夠了。直到我開始追蹤數據，才發現我的深睡比例只有 12%。
+
+[核心 10–40s]
+難怪我每天睡夠了還是很累——因為我睡的是「假的睡眠」。
+90 天追蹤下來，我發現影響深睡最大的三件事：
+第一，睡前 2 小時停止攝取咖啡因，包括你以為無害的綠茶。
+第二，室溫降到 18–20 度，大腦需要降溫才能進入深睡。
+第三，睡前 30 分鐘不看螢幕——不是因為藍光，是因為訊息刺激大腦保持警戒。
+
+[結尾 40–60s]
+90 天後，我把深睡比例從 12% 提升到 22%。早上的狀態完全不同了。`,
+  caption:`我以為睡夠 8 小時就夠了。直到我開始追蹤數據，才發現我的深睡比例只有 12%。
+
+難怪我每天睡夠了還是很累。
+
+90 天後，深睡從 12% 提升到 22%。早上的狀態完全不同了。`,
+  cta:['存起來 📊','你也在追蹤睡眠嗎？'],
+  format:'輪播貼文',signal:'Saves + DMs'
+},
+'dad-life+story':{
+  hook:'POV：帶小孩帶到一半，突然想到工作的 bug，但不能去修',
+  structure:['工程師爸爸的雙重身份焦慮','人在陪小孩，腦袋卡在程式碼','「當下在場」原則','離開螢幕反而讓問題自己解決'],
+  script:`[開場 0–8s]
+有沒有那種感覺：人在陪小孩，腦子在想 PR review。
+
+[展開 8–38s]
+全程心不在焉，兩件事都沒做好。
+孩子覺得你沒有陪他，你覺得工作也沒推進——雙輸。
+我花了很長時間才學到一件事：當爸爸的時候，就好好當爸爸。
+而且有個你可能沒想到的好處——
+很多我在電腦前卡住的問題，離開螢幕去陪小孩之後，
+腦子轉了一圈，回來就想到解法了。
+大腦需要留白，不是強迫它一直運轉。
+
+[結尾 38–60s]
+bug 不會因為你擔心它就自己消失，但孩子的童年會。`,
+  caption:`有沒有那種感覺：人在陪小孩，腦子在想 PR review。全程心不在焉，兩件事都沒做好。
+
+當爸爸的時候，就好好當爸爸。
+bug 不會因為你擔心它就自己消失，但孩子的童年會。`,
+  cta:['工程師爸媽按個讚 ❤️','分享給有同感的工作狂爸爸'],
+  format:'Reels',signal:'Shares + DMs'
+},
+'dad-life+motivation':{
+  hook:'你不需要等孩子長大才能做自己想做的事',
+  structure:['「等他大一點」的陷阱：永遠有下一個等待理由','碎片時間的真實潛力','用 AI 把準備時間壓縮到最小'],
+  script:`[開場 0–8s]
+我身邊很多爸媽說：「等孩子大一點，我就要開始做___。」
+
+[核心 8–40s]
+但孩子大了之後，又有另一個理由等。永遠有下一個「等一等」。
+我有一個朋友，他說等孩子上小學再開始寫作。孩子上小學了，他說等孩子自己寫功課再說。
+我自己也曾經是這樣，直到我意識到：時間不會等我準備好。
+廁所 3 分鐘也是 3 分鐘。每天的通勤也是時間。睡前 20 分鐘也是空間。
+
+[結尾 40–60s]
+時間不等人，但你可以把現有的時間用得更聰明。`,
+  caption:`我身邊很多爸媽說：「等孩子大一點，我就要開始做 ___。」
+
+但孩子大了之後，又有另一個理由等。
+
+時間不等人，但你可以把現有的時間用得更聰明。廁所 3 分鐘也是 3 分鐘。`,
+  cta:['這句話存起來 💡','你在等什麼？留言說說'],
+  format:'純文字 Reel',signal:'Saves + DMs'
+},
+'ai-edu+contrarian':{
+  hook:'停止學 Prompt Engineering。90% 的內容都在浪費你時間',
+  structure:['市面上 PE 課程的問題：教公式而非思維','真正有效的只有 3 個原則','更有效的學習：從你的工作流出發'],
+  script:`[開場 0–8s]
+我看過很多 Prompt Engineering 的課和文章。大多數都在教你記公式。
+
+[核心 8–38s]
+問題是：AI 在進化，公式會過時。三個月前有效的提示，現在可能已經不是最優了。
+真正需要學的，是「怎麼把你的問題說清楚」。
+這不是技術，這是溝通能力。
+你說話說不清楚，AI 給你的答案也會模糊。
+我的方法：給角色、給情境、給輸出格式。這三件事說清楚，80% 的問題就解決了。
+
+[結尾 38–60s]
+不需要背公式，需要的是清晰思考的能力——這才是 AI 時代真正有價值的技能。`,
+  caption:`市面上的 Prompt Engineering 課程，大多在教你記公式。
+
+問題是：AI 在進化，公式會過時。
+
+真正需要學的，是「怎麼把你的問題說清楚」。這不是技術，這是溝通能力。`,
+  cta:['這個觀點你怎麼看？','分享給正在找 AI 課程的朋友'],
+  format:'Reels',signal:'Shares + Comments'
+},
+'ai-edu+story':{
+  hook:'我花了 6 個月才搞懂怎麼用 AI，你不需要走這段彎路',
+  structure:['起點：用 AI 但什麼都問不到重點','卡關：結果一直跟預期差很遠','突破：問題不在 AI，在我的問法','現在：這個框架讓 AI 變成真正有用的協作者'],
+  script:`[開場 0–10s]
+剛開始用 ChatGPT 的時候，我以為它很笨。問什麼答案都很廢。
+
+[展開 10–38s]
+後來我才發現，它不笨，是我問題問得爛。
+我試了一個實驗：同樣問 AI「幫我寫一封 Email」，用三種不同的問法。
+第一種：「幫我寫一封 Email」——廢話，AI 給我廢文。
+第二種：給了收件人背景、我要達成的目的——好很多，但還需要改。
+第三種：給角色、給情境、給輸出格式、給範例——直接可以用。
+
+[結尾 38–60s]
+差距只在問法的清晰度，不在 AI 的能力。學會怎麼問，比學會哪個工具更重要。`,
+  caption:`剛開始用 ChatGPT 的時候，我以為它很笨。問什麼答案都很廢。
+
+後來我才發現，它不笨，是我問題問得爛。
+
+學會怎麼問，比學會哪個工具更重要。`,
+  cta:['有同感的舉手 ✋','分享給也在卡關的朋友'],
+  format:'Reels',signal:'Shares + DMs'
+},
+'anti-guru+contrarian':{
+  hook:'你關注的 AI 大師，90% 的建議根本沒有可行性',
+  structure:['常見大師模式：成功學包裝 + 無具體路徑','辨別好建議的 3 個問題','為什麼「廁所工程師」比大師更可信'],
+  script:`[開場 0–8s]
+我不是大師。我是一個在廁所錄影片的工程師爸爸。
+
+[核心 8–38s]
+所以我說的東西，是我真的試過、真的失敗過、真的有效的。
+判斷一個建議有沒有料，我問三個問題：
+一、他有具體步驟嗎，還是只有口號？
+二、他有提到失敗和限制嗎？只說成功的要小心。
+三、跟著做，你真的有結果嗎？
+真正有料的人，不害怕說「這個方法有時候不管用」。
+因為他是真的在做，遇到過各種狀況。
+
+[結尾 38–60s]
+不是叫你懷疑每個人，是給你一個過濾器，讓你花在學習上的時間更有價值。`,
+  caption:`我不是大師。我是一個每天用 AI 工具解決真實問題的工程師爸爸。
+
+所以我說的東西，是我真的試過、真的失敗過、真的有效的。不是為了漲粉，是因為我希望有人比我少走一段彎路。`,
+  cta:['你也看膩 AI 大師了嗎？','分享給被大師收割過的朋友 😂'],
+  format:'Reels',signal:'Shares + Comments'
+},
+'anti-guru+story':{
+  hook:'我被一個「AI 致富」課程騙了，這就是我現在不賣課的原因',
+  structure:['那堂課的承諾：30 天 AI 副業月入 10 萬','實際內容：全是可以 Google 到的免費資訊','教訓：信真實案例，不信承諾結果'],
+  script:`[開場 0–10s]
+我交過學費。不是便宜的那種。
+
+[故事 10–38s]
+那堂課的標題是：30 天 AI 副業，月收入翻倍。
+我心動了，我付了。
+結果呢？裡面九成的內容，我 Google 15 分鐘就能找到，而且還更詳細。
+我沉默了很久才能接受這件事：
+那個老師賺錢的方式，不是靠 AI，是靠賣「如何用 AI 賺錢」的課程。
+
+[轉折 38–52s]
+那堂課教我最大的東西不是 AI，而是：永遠先問「這個人自己有沒有在做這件事」。
+如果他賣的是「怎麼賺錢」，但他的收入是賣課，那就很值得懷疑了。
+
+[結尾 52–60s]
+我分享的東西，都是我現在實際在做的。你可以來這裡驗證。`,
+  caption:`我交過學費。不是便宜的那種。
+
+那堂課教我最大的東西不是 AI，而是：永遠先問「這個人自己有沒有在做這件事」。
+
+如果他賣的是「怎麼賺錢」，但他的收入是賣課——那就很值得懷疑了。`,
+  cta:['有沒有被坑過的？留言聊 😅','分享給正在考慮買 AI 課的朋友'],
+  format:'Reels',signal:'Shares + Comments'
+},
+};
+
+function getC(key){
+  if(CM[key]) return CM[key];
+  const[tid,sid]=key.split('+');
+  const t=THEMES.find(x=>x.id===tid)||THEMES[0];
+  const s=STYLES.find(x=>x.id===sid)||STYLES[0];
+  return{hook:`關於「${t.name}」的${s.name}視角`,structure:['建立核心觀點','分享個人實踐','給出可執行的下一步'],
+    script:`[開場]\n談到「${t.name}」，大多數人的第一反應是什麼？\n\n[核心]\n從${s.name}的角度切入，這件事的關鍵在於清楚的框架、真實的案例，以及一個你今天就能做的行動。\n\n[結尾]\n存起來，慢慢消化。`,
+    caption:`關於「${t.name}」，我想從${s.name}的角度分享一個觀察。`,
+    cta:['存起來 🔖','你有什麼看法？'],format:'Reels 或輪播',signal:'Saves + Comments'};
+}
+
+// ─── SEED RANDOM ───
+function seededRand(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/0xffffffff;};}
+function todaySeed(){const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()+regenCount*9999;}
+function pickTopics(){
+  const rand=seededRand(todaySeed());
+  const keys=Object.keys(CM).sort(()=>rand()-.5);
+  const used={t:new Set(),s:new Set()},picked=[];
+  for(const k of keys){
+    const[t,s]=k.split('+');
+    if(!used.t.has(t)&&!used.s.has(s)){picked.push(k);used.t.add(t);used.s.add(s);if(picked.length===3)break;}
+  }
+  while(picked.length<3){const k=keys[picked.length];if(!picked.includes(k))picked.push(k);}
+  return picked.slice(0,3);
+}
+
+// ─── STYLE ANALYSIS ───
+function analyzeStyle(){
+  const texts=Object.values(styleRecords);
+  if(texts.length<2) return null;
+  const all=texts.join('\n');
+  const casual=(all.match(/哈|笑死|真的|超|根本|欸|啊/g)||[]).length;
+  const emojis=(all.match(/[\u{1F300}-\u{1FAFF}]/gu)||[]).length;
+  const bullets=(all.match(/^[→•\-\*]/gm)||[]).length;
+  return{
+    tone:casual>4?'口語親切':bullets>5?'清單條列':'知識型深度',
+    emojiFreq:emojis>8?'大量':emojis>2?'適度':'少用',
+    editCount:texts.length
+  };
+}
+function styleHint(){
+  const p=analyzeStyle();if(!p)return null;
+  const h=[];
+  if(p.tone==='口語親切')h.push('語氣更口語');
+  if(p.tone==='清單條列')h.push('改為條列格式');
+  if(p.emojiFreq==='大量')h.push('加入更多 Emoji');
+  if(p.emojiFreq==='少用')h.push('Emoji 減少');
+  return h.length?'✨ 根據你的習慣：'+h.join('、'):null;
+}
+
+// ─── PAGE 1: PROFILE ───
+function renderProfile(){
+  const el=id('page-profile'),p=userProfile;
+  const ini=(p?.ig_handle||currentUser?.email||'U')[0].toUpperCase();
+  if(!p){el.innerHTML=`<div class="card"><h2>歡迎！先設定你的自媒體定位 👋</h2><p class="sub">這些資訊會幫助系統為你量身打造每日主題</p>${profileForm()}</div>`;return;}
+  const styleStat=analyzeStyle();
+  el.innerHTML=`
+    <div class="card">
+      <div class="profile-header">
+        <div class="avatar">${ini}</div>
+        <div><div style="font-size:1.1rem;font-weight:700">@${p.ig_handle||'未設定'}</div><div style="font-size:.8rem;color:var(--muted);margin-top:2px">${p.niche||'尚未設定定位'}</div></div>
+      </div>
+      <div class="grid2">
+        <div class="info-box"><div class="lb">核心賽道</div><div class="vl">${p.niche||'—'}</div></div>
+        <div class="info-box"><div class="lb">目標受眾</div><div class="vl">${p.target_audience||'—'}</div></div>
+        <div class="info-box"><div class="lb">內容風格</div><div class="vl">${p.content_style||'—'}</div></div>
+        <div class="info-box"><div class="lb">品牌定位語</div><div class="vl">${p.bio_statement||'—'}</div></div>
+      </div>
+      ${p.goals?.length?`<div class="divider"></div><div class="section-title">目標</div><div class="pill-group">${p.goals.map(g=>`<span class="tag tag-a">${g}</span>`).join('')}</div>`:''}
+      <div class="divider"></div>
+      <div class="section-title">語氣學習狀態</div>
+      ${styleStat?`<div class="grid2">
+        <div class="info-box"><div class="lb">已學習篇數</div><div class="vl" style="color:var(--accent)">${styleStat.editCount}</div></div>
+        <div class="info-box"><div class="lb">語氣傾向</div><div class="vl">${styleStat.tone}</div></div>
+        <div class="info-box"><div class="lb">Emoji 頻率</div><div class="vl">${styleStat.emojiFreq}</div></div>
+      </div>`:`<div style="color:var(--muted);font-size:.82rem">尚無修改記錄——到「每日主題」修改腳本後，語氣會自動學習並顯示在這裡。</div>`}
+      <div class="divider"></div>
+      <button class="btn btn-ghost btn-sm" onclick="editProfile()">✏️ 編輯定位</button>
+    </div>`;
+}
+
+function profileForm(ex={}){
+  const goals=['漲粉','導購','建立 IP','流量曝光','建立社群'];
+  return`<div class="form-group"><label>IG 帳號</label><input id="pf-h" value="${ex.ig_handle||''}" placeholder="ailifeu（不含 @）"></div>
+    <div class="form-group"><label>核心賽道</label><input id="pf-n" value="${ex.niche||''}" placeholder="AI 工具 × 健康管理 × 工程師奶爸"></div>
+    <div class="form-group"><label>目標受眾</label><input id="pf-a" value="${ex.target_audience||''}" placeholder="30-45 歲上班族，想提升工作效率"></div>
+    <div class="form-group"><label>內容風格</label><select id="pf-s">${['口語親切（像朋友聊天）','知識型深度（分析教學）','故事共鳴（個人經歷）','反骨辯論（挑戰常識）'].map(s=>`<option ${ex.content_style===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="form-group"><label>品牌定位語</label><input id="pf-b" value="${ex.bio_statement||''}" placeholder="每週實測 AI 工具，幫你少走彎路的工程師奶爸"></div>
+    <div class="form-group"><label>目前目標</label><div class="pill-group" style="margin-top:4px" id="pf-g">${goals.map(g=>`<span class="tag tag-a" style="cursor:pointer;padding:5px 12px;border:1px solid ${(ex.goals||[]).includes(g)?'var(--accent)':'var(--border)'}" onclick="tg(this)" data-goal="${g}" data-sel="${(ex.goals||[]).includes(g)?'1':''}">${g}</span>`).join('')}</div></div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="saveProfile()">儲存定位</button>`;
+}
+function tg(el){el.dataset.sel=el.dataset.sel==='1'?'':'1';el.style.borderColor=el.dataset.sel==='1'?'var(--accent)':'var(--border)';}
+function editProfile(){id('page-profile').innerHTML=`<div class="card"><h2>✏️ 編輯定位</h2><div class="sub"></div>${profileForm(userProfile||{})}</div>`;}
+async function saveProfile(){
+  const goals=[...document.querySelectorAll('#pf-g span')].filter(s=>s.dataset.sel==='1').map(s=>s.dataset.goal);
+  const data={user_id:currentUser.id,ig_handle:v('pf-h').replace('@',''),niche:v('pf-n'),target_audience:v('pf-a'),content_style:document.getElementById('pf-s').value,bio_statement:v('pf-b'),goals,updated_at:new Date().toISOString()};
+  const{error}=await sb.from('ig_profiles').upsert(data,{onConflict:'user_id'});
+  if(error){toast('儲存失敗：'+error.message,true);return;}
+  userProfile=data;
+  if(data.ig_handle)id('top-handle').textContent='@'+data.ig_handle;
+  toast('定位已儲存 ✓');renderProfile();
+}
+
+// ─── PAGE 2: TOPICS ───
+function renderTopics(){
+  const el=id('page-topics'),keys=pickTopics();
+  const hint=styleHint();
+  const d=new Date(),ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div><div style="font-size:1.05rem;font-weight:700">今日主題</div><div style="font-size:.78rem;color:var(--muted)">${ds}</div></div>
+      ${hint?`<div style="font-size:.72rem;color:var(--green);max-width:160px;text-align:right">${hint}</div>`:''}
+    </div>
+    ${keys.map(k=>{
+      const[tid,sid]=k.split('+');
+      const t=THEMES.find(x=>x.id===tid),s=STYLES.find(x=>x.id===sid),c=getC(k);
+      const saved=styleRecords[k];
+      return`<div class="topic-card" onclick="openDetail('${k}')">
+        <div class="topic-meta">
+          <span class="tag tag-a">${t.emoji} ${t.name}</span>
+          <span class="tag tag-o">${s.tag}</span>
+          <span class="tag" style="color:var(--muted)">${c.format}</span>
+          ${saved?'<span class="tag tag-g">已修改 ✓</span>':''}
+        </div>
+        <div class="topic-hook">${c.hook}</div>
+      </div>`;
+    }).join('')}
+    <button class="regen-btn" onclick="regenT()">↻ 重新抽取今日三主題</button>`;
+}
+function regenT(){regenCount++;renderTopics();}
+
+// ─── DETAIL ───
+function openDetail(key){
+  currentTopicKey=key;
+  const[tid,sid]=key.split('+');
+  const t=THEMES.find(x=>x.id===tid),s=STYLES.find(x=>x.id===sid),c=getC(key);
+  const saved=styleRecords[key]||'';
+  id('detail-body').innerHTML=`
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="tag tag-a">${t.emoji} ${t.name}</span><span class="tag tag-o">${s.tag}</span>
+    </div>
+    <div class="card"><div class="section-title">🎯 Hook（開場勾子）</div><div class="hook-box">${c.hook}</div></div>
+    <div class="card">
+      <div class="section-title">🎙️ 一分鐘口播腳本</div>
+      <div class="timing">⏱ 約 60 秒 · 建議語速 150 字／分</div>
+      <div class="script-box">${c.script}</div>
+    </div>
+    <div class="card"><div class="section-title">📐 內容結構</div><ol class="structure">${c.structure.map(x=>`<li>${x}</li>`).join('')}</ol></div>
+    <div class="card"><div class="section-title">📝 Caption 草稿</div><div class="caption-box">${c.caption}</div></div>
+    <div class="card">
+      <div class="section-title">📢 CTA 選項</div>
+      <div class="cta-row">${c.cta.map(x=>`<div class="cta-pill">${x}</div>`).join('')}</div>
+      <div style="margin-top:10px"><span class="tag tag-g">演算法目標：${c.signal}</span></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:.83rem;color:var(--muted)">✏️ 修改後系統學習你的語氣</span>
+        <span class="save-ok" id="save-ok">已儲存 ✓</span>
+      </div>
+      <textarea class="ea" id="edit-area" placeholder="複製上方腳本或 Caption，修改成你自己的語氣…">${saved}</textarea>
+      <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveEdit()">儲存修改</button>
+    </div>`;
+  id('detail-overlay').classList.add('open');
+  id('detail-overlay').scrollTop=0;
+}
+function closeDetail(){id('detail-overlay').classList.remove('open');renderTopics();}
+async function saveEdit(){
+  const text=id('edit-area').value.trim();
+  if(!text){toast('請輸入修改內容',true);return;}
+  const{error}=await sb.from('ig_style_records').upsert(
+    {user_id:currentUser.id,topic_key:currentTopicKey,edited_text:text,created_at:new Date().toISOString()},
+    {onConflict:'user_id,topic_key'}
+  );
+  if(error){toast('儲存失敗',true);return;}
+  styleRecords[currentTopicKey]=text;
+  const ok=id('save-ok');ok.classList.add('show');setTimeout(()=>ok.classList.remove('show'),2500);
+}
+
+// ─── PAGE 3: ADVICE ───
+function renderAdvice(){
+  const el=id('page-advice');
+  el.innerHTML=`
+    <div class="card">
+      <h2>📊 新增流量數據</h2><p class="sub">記錄後系統分析帳號表現並給出建議</p>
+      <div class="perf-form">
+        <div class="mi"><label>日期</label><input type="date" id="pd-date" value="${new Date().toISOString().split('T')[0]}"></div>
+        <div class="mi"><label>格式</label><select id="pd-type"><option>Reel</option><option>輪播</option><option>限動</option><option>單圖</option></select></div>
+        <div class="mi"><label>觀看數</label><input type="number" id="pd-views" placeholder="0" min="0"></div>
+        <div class="mi"><label>按讚</label><input type="number" id="pd-likes" placeholder="0" min="0"></div>
+        <div class="mi"><label>收藏</label><input type="number" id="pd-saves" placeholder="0" min="0"></div>
+        <div class="mi"><label>分享</label><input type="number" id="pd-shares" placeholder="0" min="0"></div>
+        <div class="mi"><label>DM</label><input type="number" id="pd-dms" placeholder="0" min="0"></div>
+        <div class="mi"><label>留言</label><input type="number" id="pd-comments" placeholder="0" min="0"></div>
+      </div>
+      <div class="form-group" style="margin-top:12px"><label>備註</label><input id="pd-notes" placeholder="主題、心得…"></div>
+      <button class="btn btn-primary btn-sm" style="margin-top:4px" onclick="savePerf()">儲存數據</button>
+    </div>
+    ${buildAdvice()}
+    <div class="card"><h2>📋 近期記錄</h2><p class="sub"></p>${buildPerfHistory()}</div>`;
+}
+
+function buildAdvice(){
+  if(!perfData.length) return`<div class="advice-card"><h3>💡 開始記錄你的流量數據</h3><ul>
+    <li>新增至少 3 筆貼文數據後，系統會分析你的帳號表現</li>
+    <li>2026 年演算法最重視：觀看時長 → DMs → 分享 → 收藏 → 按讚</li>
+    <li>健康互動率參考（1K–10K 粉絲）：11% 以上為優良</li></ul></div>`;
+
+  const n=perfData.length;
+  const tot=(k)=>perfData.reduce((s,r)=>s+(r[k]||0),0);
+  const views=tot('views'),saves=tot('saves'),shares=tot('shares'),dms=tot('dms'),likes=tot('likes'),comments=tot('comments');
+  const avgV=Math.round(views/n);
+  const eng=views>0?(((saves+shares+dms+likes+comments)/views)*100).toFixed(1):0;
+  const saveR=views>0?((saves/views)*100).toFixed(1):0;
+  const shareR=views>0?((shares/views)*100).toFixed(1):0;
+
+  const byFmt={};
+  perfData.forEach(r=>{const f=r.post_type||'其他';if(!byFmt[f]){byFmt[f]={c:0,v:0};}byFmt[f].c++;byFmt[f].v+=r.views||0;});
+  const best=Object.entries(byFmt).sort((a,b)=>b[1].v/b[1].c-a[1].v/a[1].c)[0];
+
+  const tips=[];
+  if(saveR<2) tips.push('收藏率偏低（'+saveR+'%）── 試試「清單型」或「行動指南」，提高工具性價值');
+  else tips.push('收藏率不錯（'+saveR+'%）── 繼續製作「清單型」和「行動指南」內容');
+  if(shareR<1) tips.push('分享率偏低（'+shareR+'%）── 試試「反向思考」或「故事共鳴」，提升社交貨幣感');
+  else tips.push('分享率健康（'+shareR+'%）── 反骨型和共鳴型內容對你很有效，多做');
+  if(dms<n*0.5) tips.push('DM 互動偏少 ── 在 Caption 結尾加入「DM 我取得⋯」的 CTA，提升最高權重訊號');
+  else tips.push('DM 互動良好 ── 這是 2026 最高權重訊號，每篇都設計 DM CTA，繼續保持');
+  if(eng<5) tips.push(`整體互動率 ${eng}% 偏低 ── 優化 Hook 前 3 秒，或嘗試「痛點式開場」`);
+  else tips.push(`整體互動率 ${eng}% 表現良好 👏`);
+
+  return`
+    <div class="advice-card">
+      <h3>📈 帳號表現摘要（近 ${n} 筆）</h3>
+      <table class="bm-table">
+        <tr><th>指標</th><th>數值</th><th>2026 基準</th><th>狀態</th></tr>
+        <tr><td>平均觀看</td><td>${avgV.toLocaleString()}</td><td>—</td><td>—</td></tr>
+        <tr><td>互動率</td><td>${eng}%</td><td>&gt;11%（1K–10K）</td><td class="${eng>=11?'good':eng>=6?'warn':'bad'}">${eng>=11?'✅ 優良':eng>=6?'⚠️ 待改善':'❌ 需優化'}</td></tr>
+        <tr><td>收藏率</td><td>${saveR}%</td><td>&gt;2%</td><td class="${saveR>=2?'good':'bad'}">${saveR>=2?'✅':'❌'}</td></tr>
+        <tr><td>分享率</td><td>${shareR}%</td><td>&gt;1%</td><td class="${shareR>=1?'good':'bad'}">${shareR>=1?'✅':'❌'}</td></tr>
+        ${best?`<tr><td>最佳格式</td><td colspan="3" class="good">📌 ${best[0]}（均 ${Math.round(best[1].v/best[1].c).toLocaleString()} 觀看）</td></tr>`:''}
+      </table>
+    </div>
+    <div class="advice-card">
+      <h3>🎯 個人化建議</h3><ul>${tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+    </div>
+    <div class="advice-card">
+      <h3>🗓️ 本週內容建議組合</h3><ul>
+        <li>${saveR<2?'多做 1 篇「清單型」內容衝收藏率':'繼續 1 篇高收藏內容維持帳號權重'}</li>
+        <li>${shareR<1?'加入 1 篇「反骨型 Reels」刺激分享':'保持 1 篇反骨觀點內容'}</li>
+        <li>${dms<n*0.5?'每篇 Caption 末尾加 DM CTA，建立私訊習慣':'DM CTA 表現不錯，維持節奏'}</li>
+      </ul>
+    </div>`;
+}
+
+function buildPerfHistory(){
+  if(!perfData.length) return`<div class="empty">還沒有數據記錄<br>新增第一筆貼文數據開始追蹤</div>`;
+  return perfData.slice(0,10).map(r=>`
+    <div class="ph-item">
+      <div class="ph-meta"><span>📅 ${r.post_date}</span><span class="tag tag-o">${r.post_type||'—'}</span>${r.notes?`<span>${r.notes}</span>`:''}</div>
+      <div class="ph-metrics">
+        ${[['views','觀看'],['saves','收藏'],['shares','分享'],['dms','DM'],['likes','讚'],['comments','留言']].map(([k,l])=>`<div class="pm"><div class="v">${(r[k]||0).toLocaleString()}</div><div class="k">${l}</div></div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function savePerf(){
+  const data={user_id:currentUser.id,post_date:v('pd-date'),post_type:document.getElementById('pd-type').value,
+    views:n('pd-views'),likes:n('pd-likes'),saves:n('pd-saves'),shares:n('pd-shares'),dms:n('pd-dms'),comments:n('pd-comments'),
+    notes:v('pd-notes')};
+  const{error}=await sb.from('ig_performance').insert(data);
+  if(error){toast('儲存失敗：'+error.message,true);return;}
+  perfData.unshift(data);toast('數據已記錄 ✓');renderAdvice();
+}
+
+// ─── UTILS ───
+const id=x=>document.getElementById(x);
+const v=x=>id(x)?.value.trim()||'';
+const n=x=>parseInt(id(x)?.value)||0;
+function toast(msg,err=false){
+  const t=id('toast');t.textContent=msg;t.style.background=err?'#c0392b':'#2d2d2d';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);
+}
+</script>
+</body>
+</html>
