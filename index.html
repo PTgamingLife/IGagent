@@ -865,57 +865,192 @@ function styleHint(){
   return h.length?'✨ 根據你的習慣：'+h.join('、'):null;
 }
 
+// ─── POSITIONING ENGINE ───
+// Based on: 3 角色定位句型公式 + 4大短影音定位類型
+const MARKET_TYPES=[
+  {id:'pro-niche', label:'高專業 × 高精準', desc:'針對特定族群的專業知識內容', pro:true, niche:true},
+  {id:'pro-broad', label:'高專業 × 廣受眾', desc:'通用專業內容（如趨勢解析）', pro:true, niche:false},
+  {id:'light-niche',label:'輕鬆 × 高精準',   desc:'特定族群的生活/娛樂內容', pro:false, niche:true},
+  {id:'light-broad',label:'輕鬆 × 廣受眾',   desc:'娛樂性廣泛內容', pro:false, niche:false},
+];
+
+function generatePositioning(identity, audience, problem, result, method){
+  if(!identity||!audience||!problem) return [];
+  return[
+    `我是${identity}，幫${audience}解決${problem}`,
+    `我是${identity}，專攻${result||problem}，讓${audience}得到改變`,
+    `我是${identity}，用${method||'真實經驗'}幫${audience}達成${result||'目標'}`
+  ];
+}
+
+function positioningDisplay(sentences){
+  if(!sentences||!sentences.length) return`<div style="color:var(--muted);font-size:.82rem">尚未建立品牌定位語——點「建立定位」開始</div>`;
+  const labels=['角色定位','市場定位','品牌記憶'];
+  const colors=['var(--accent)','var(--accent2)','var(--green)'];
+  return sentences.slice(0,3).map((s,i)=>`
+    <div style="background:var(--surface2);border-left:3px solid ${colors[i]};border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:8px">
+      <div style="font-size:.68rem;color:${colors[i]};text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;font-weight:600">${labels[i]}</div>
+      <div style="font-size:.88rem;line-height:1.6">${s}</div>
+    </div>`).join('');
+}
+
 // ─── PAGE 1: PROFILE ───
 function renderProfile(){
   const el=id('page-profile'),p=userProfile;
   const ini=(p?.ig_handle||currentUser?.email||'U')[0].toUpperCase();
-  if(!p){el.innerHTML=`<div class="card"><h2>歡迎！先設定你的自媒體定位 👋</h2><p class="sub">這些資訊會幫助系統為你量身打造每日主題</p>${profileForm()}</div>`;return;}
+  if(!p){
+    el.innerHTML=`<div class="card">
+      <h2>歡迎！建立你的品牌定位 👋</h2>
+      <p class="sub">兩個步驟，幫你打造三句話代表你的品牌角色</p>
+      ${profileFormStep1()}
+    </div>`;
+    return;
+  }
   const styleStat=analyzeStyle();
+  const sentences=p.positioning_sentences||[];
+  const mt=MARKET_TYPES.find(x=>x.id===p.market_type);
   el.innerHTML=`
     <div class="card">
       <div class="profile-header">
         <div class="avatar">${ini}</div>
-        <div><div style="font-size:1.1rem;font-weight:700">@${p.ig_handle||'未設定'}</div><div style="font-size:.8rem;color:var(--muted);margin-top:2px">${p.niche||'尚未設定定位'}</div></div>
+        <div>
+          <div style="font-size:1.1rem;font-weight:700">@${p.ig_handle||'未設定'}</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-top:2px">${p.niche||'尚未設定定位'}</div>
+        </div>
       </div>
+
+      <div class="divider"></div>
+      <div class="section-title">🎯 三大品牌定位語</div>
+      ${positioningDisplay(sentences)}
+
+      ${mt?`<div style="margin-top:8px"><span class="tag tag-o">${mt.label}</span> <span style="font-size:.75rem;color:var(--muted)">${mt.desc}</span></div>`:''}
+
+      <div class="divider"></div>
       <div class="grid2">
         <div class="info-box"><div class="lb">核心賽道</div><div class="vl">${p.niche||'—'}</div></div>
         <div class="info-box"><div class="lb">目標受眾</div><div class="vl">${p.target_audience||'—'}</div></div>
         <div class="info-box"><div class="lb">內容風格</div><div class="vl">${p.content_style||'—'}</div></div>
-        <div class="info-box"><div class="lb">品牌定位語</div><div class="vl">${p.bio_statement||'—'}</div></div>
+        <div class="info-box"><div class="lb">主要方法</div><div class="vl">${p.use_method||'—'}</div></div>
       </div>
+
       ${p.goals?.length?`<div class="divider"></div><div class="section-title">目標</div><div class="pill-group">${p.goals.map(g=>`<span class="tag tag-a">${g}</span>`).join('')}</div>`:''}
+
       <div class="divider"></div>
       <div class="section-title">語氣學習狀態</div>
       ${styleStat?`<div class="grid2">
         <div class="info-box"><div class="lb">已學習篇數</div><div class="vl" style="color:var(--accent)">${styleStat.editCount}</div></div>
         <div class="info-box"><div class="lb">語氣傾向</div><div class="vl">${styleStat.tone}</div></div>
         <div class="info-box"><div class="lb">Emoji 頻率</div><div class="vl">${styleStat.emojiFreq}</div></div>
-      </div>`:`<div style="color:var(--muted);font-size:.82rem">尚無修改記錄——到「每日主題」修改腳本後，語氣會自動學習並顯示在這裡。</div>`}
+      </div>`:`<div style="color:var(--muted);font-size:.82rem">到「每日主題」修改腳本後，語氣會自動學習。</div>`}
       <div class="divider"></div>
-      <button class="btn btn-ghost btn-sm" onclick="editProfile()">✏️ 編輯定位</button>
+      <button class="btn btn-ghost btn-sm" onclick="editProfile()">✏️ 重新設定定位</button>
     </div>`;
 }
 
-function profileForm(ex={}){
+// ── STEP 1: Basic info ──
+function profileFormStep1(ex={}){
   const goals=['漲粉','導購','建立 IP','流量曝光','建立社群'];
-  return`<div class="form-group"><label>IG 帳號</label><input id="pf-h" value="${ex.ig_handle||''}" placeholder="ailifeu（不含 @）"></div>
+  return`
+    <div style="font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:12px">步驟 1／2 · 基本資訊</div>
+    <div class="form-group"><label>IG 帳號</label><input id="pf-h" value="${ex.ig_handle||''}" placeholder="ailifeu（不含 @）"></div>
     <div class="form-group"><label>核心賽道</label><input id="pf-n" value="${ex.niche||''}" placeholder="AI 工具 × 健康管理 × 工程師奶爸"></div>
-    <div class="form-group"><label>目標受眾</label><input id="pf-a" value="${ex.target_audience||''}" placeholder="30-45 歲上班族，想提升工作效率"></div>
+    <div class="form-group"><label>目標受眾</label><input id="pf-a" value="${ex.target_audience||''}" placeholder="30–45 歲上班族，想提升工作效率"></div>
     <div class="form-group"><label>內容風格</label><select id="pf-s">${['口語親切（像朋友聊天）','知識型深度（分析教學）','故事共鳴（個人經歷）','反骨辯論（挑戰常識）'].map(s=>`<option ${ex.content_style===s?'selected':''}>${s}</option>`).join('')}</select></div>
-    <div class="form-group"><label>品牌定位語</label><input id="pf-b" value="${ex.bio_statement||''}" placeholder="每週實測 AI 工具，幫你少走彎路的工程師奶爸"></div>
+    <div class="form-group"><label>市場定位類型</label><select id="pf-mt">${MARKET_TYPES.map(m=>`<option value="${m.id}" ${ex.market_type===m.id?'selected':''}>${m.label} — ${m.desc}</option>`).join('')}</select></div>
     <div class="form-group"><label>目前目標</label><div class="pill-group" style="margin-top:4px" id="pf-g">${goals.map(g=>`<span class="tag tag-a" style="cursor:pointer;padding:5px 12px;border:1px solid ${(ex.goals||[]).includes(g)?'var(--accent)':'var(--border)'}" onclick="tg(this)" data-goal="${g}" data-sel="${(ex.goals||[]).includes(g)?'1':''}">${g}</span>`).join('')}</div></div>
-    <button class="btn btn-primary" style="margin-top:8px" onclick="saveProfile()">儲存定位</button>`;
+    <button class="btn btn-primary" style="margin-top:8px" onclick="goStep2()">下一步：建立三大定位語 →</button>`;
 }
+
+// ── STEP 2: Positioning wizard ──
+function profileFormStep2(ex={}){
+  const preview=generatePositioning(ex.identity_label||'',ex.target_audience||'',ex.solve_problem||'',ex.deliver_result||'',ex.use_method||'');
+  return`
+    <div style="font-size:.78rem;color:var(--accent);font-weight:600;margin-bottom:12px">步驟 2／2 · 打造三句品牌定位語</div>
+    <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:.78rem;color:var(--muted);line-height:1.8">
+      填入你的答案，系統自動生成三句話。<br>
+      <span style="color:var(--text)">問自己：我是誰？幫誰？解決什麼？帶來什麼結果？用什麼方法？</span>
+    </div>
+    <div class="form-group">
+      <label>你的身份（你是誰）</label>
+      <input id="pf-id" value="${ex.identity_label||''}" placeholder="工程師奶爸、自媒體創作者、健身教練…">
+    </div>
+    <div class="form-group">
+      <label>幫誰解決什麼問題</label>
+      <input id="pf-prob" value="${ex.solve_problem||''}" placeholder="AI 初學者選工具浪費時間、上班族沒時間健身…">
+    </div>
+    <div class="form-group">
+      <label>帶來什麼結果</label>
+      <input id="pf-res" value="${ex.deliver_result||''}" placeholder="快速上手 AI 工具、每天 30 分鐘維持健康…">
+    </div>
+    <div class="form-group">
+      <label>你用什麼方法或獨特角度</label>
+      <input id="pf-meth" value="${ex.use_method||''}" placeholder="真實測試、親身經歷、工程師視角、邊帶孩子邊做…">
+    </div>
+    <div id="pos-preview" style="margin:16px 0">
+      ${preview.length?positioningDisplay(preview):`<div style="color:var(--muted);font-size:.82rem">填入上方資訊後，三句定位語會即時顯示</div>`}
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1;margin-top:0" onclick="editProfile()">← 返回</button>
+      <button class="btn btn-primary" style="flex:2;margin-top:0" onclick="saveProfile()">儲存定位 ✓</button>
+    </div>`;
+}
+
 function tg(el){el.dataset.sel=el.dataset.sel==='1'?'':'1';el.style.borderColor=el.dataset.sel==='1'?'var(--accent)':'var(--border)';}
-function editProfile(){id('page-profile').innerHTML=`<div class="card"><h2>✏️ 編輯定位</h2><div class="sub"></div>${profileForm(userProfile||{})}</div>`;}
+
+// Step 1 → Step 2 transition (save step 1 fields into temp, render step 2)
+let _step1={};
+function goStep2(){
+  _step1={
+    ig_handle:v('pf-h').replace('@',''),
+    niche:v('pf-n'),
+    target_audience:v('pf-a'),
+    content_style:document.getElementById('pf-s').value,
+    market_type:document.getElementById('pf-mt').value,
+    goals:[...document.querySelectorAll('#pf-g span')].filter(s=>s.dataset.sel==='1').map(s=>s.dataset.goal)
+  };
+  if(!_step1.ig_handle||!_step1.niche||!_step1.target_audience){toast('請先填入帳號、賽道、目標受眾',true);return;}
+  id('page-profile').innerHTML=`<div class="card"><h2>🎯 建立三大品牌定位語</h2>${profileFormStep2({..._step1,...(userProfile||{})})}</div>`;
+  // Live preview on input
+  ['pf-id','pf-prob','pf-res','pf-meth'].forEach(fid=>{
+    const el=document.getElementById(fid);
+    if(el)el.addEventListener('input',updatePosPreview);
+  });
+}
+function updatePosPreview(){
+  const sentences=generatePositioning(v('pf-id'),_step1.target_audience,v('pf-prob'),v('pf-res'),v('pf-meth'));
+  id('pos-preview').innerHTML=sentences.length?positioningDisplay(sentences):`<div style="color:var(--muted);font-size:.82rem">填入上方資訊後，三句定位語會即時顯示</div>`;
+}
+
+function editProfile(){
+  const ex=userProfile||{};
+  id('page-profile').innerHTML=`<div class="card"><h2>✏️ 重新設定定位</h2>${profileFormStep1(ex)}</div>`;
+}
+
 async function saveProfile(){
-  const goals=[...document.querySelectorAll('#pf-g span')].filter(s=>s.dataset.sel==='1').map(s=>s.dataset.goal);
-  const data={user_id:currentUser.id,ig_handle:v('pf-h').replace('@',''),niche:v('pf-n'),target_audience:v('pf-a'),content_style:document.getElementById('pf-s').value,bio_statement:v('pf-b'),goals,updated_at:new Date().toISOString()};
+  const identity=v('pf-id'),problem=v('pf-prob'),result=v('pf-res'),method=v('pf-meth');
+  if(!identity||!problem){toast('請填入身份與解決的問題',true);return;}
+  const sentences=generatePositioning(identity,_step1.target_audience,problem,result,method);
+  const data={
+    user_id:currentUser.id,
+    ig_handle:_step1.ig_handle,
+    niche:_step1.niche,
+    target_audience:_step1.target_audience,
+    content_style:_step1.content_style,
+    market_type:_step1.market_type,
+    goals:_step1.goals,
+    identity_label:identity,
+    solve_problem:problem,
+    deliver_result:result,
+    use_method:method,
+    positioning_sentences:sentences,
+    bio_statement:sentences[0]||'',
+    updated_at:new Date().toISOString()
+  };
   const{error}=await sb.from('ig_profiles').upsert(data,{onConflict:'user_id'});
   if(error){toast('儲存失敗：'+error.message,true);return;}
   userProfile=data;
   if(data.ig_handle)id('top-handle').textContent='@'+data.ig_handle;
-  toast('定位已儲存 ✓');renderProfile();
+  toast('品牌定位已儲存 ✓');renderProfile();
 }
 
 // ─── PAGE 2: TOPICS ───
