@@ -113,20 +113,39 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
 /* ── Toast ── */
 #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.85rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100;white-space:nowrap}
 #toast.show{opacity:1}
+
+/* ── Loading splash ── */
+#loading-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <div style="color:var(--muted);font-size:.85rem">載入中…</div>
+</div>
+
 <!-- AUTH -->
-<div id="auth-screen">
+<div id="auth-screen" style="display:none">
   <div class="auth-card">
     <h1>IG Agent 🤖</h1>
     <p>你的 IG 內容工廠 · 登入開始使用</p>
-    <div class="form-group"><label>Email</label><input type="email" id="au-email" placeholder="you@example.com"></div>
-    <div class="form-group"><label>密碼</label><input type="password" id="au-pw" placeholder="••••••••"></div>
-    <div class="err" id="au-err"></div>
-    <button class="btn btn-primary" onclick="doLogin()">登入</button>
-    <button class="btn btn-ghost" onclick="doRegister()">還沒有帳號？註冊</button>
+    <div id="auth-login-form">
+      <div class="form-group"><label>Email</label><input type="email" id="au-email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>密碼</label><input type="password" id="au-pw" placeholder="••••••••"></div>
+      <div class="err" id="au-err"></div>
+      <button class="btn btn-primary" onclick="doLogin()">登入</button>
+      <button class="btn btn-ghost" onclick="doRegister()">還沒有帳號？註冊</button>
+    </div>
+    <div id="auth-confirm-msg" style="display:none;text-align:center;padding:16px 0">
+      <div style="font-size:2rem;margin-bottom:12px">📧</div>
+      <p style="color:var(--text);font-size:.95rem;margin-bottom:8px">確認信已寄出！</p>
+      <p style="color:var(--muted);font-size:.82rem;line-height:1.6">請查收 Email 並點擊確認連結<br>確認後回到此頁登入</p>
+      <button class="btn btn-ghost" style="margin-top:16px" onclick="showLoginForm()">返回登入</button>
+    </div>
   </div>
 </div>
 
@@ -180,14 +199,36 @@ async function doLogin(){
   if(error) id('au-err').textContent=error.message;
 }
 async function doRegister(){
-  const pw=v('au-pw');
+  const email=v('au-email'), pw=v('au-pw');
+  if(!email){id('au-err').textContent='請輸入 Email';return;}
   if(pw.length<6){id('au-err').textContent='密碼至少 6 碼';return;}
-  const {error}=await sb.auth.signUp({email:v('au-email'),password:pw});
-  id('au-err').textContent=error?error.message:'✅ 請查收確認信！';
+  id('au-err').textContent='';
+  const {error}=await sb.auth.signUp({
+    email, password:pw,
+    options:{emailRedirectTo:'https://ptgaminglife.github.io/IGagent'}
+  });
+  if(error){
+    // If email confirmation is disabled, user is auto-logged in
+    if(error.message.includes('already registered')){
+      id('au-err').textContent='此 Email 已註冊，請直接登入';
+    } else {
+      id('au-err').textContent=error.message;
+    }
+  } else {
+    id('auth-login-form').style.display='none';
+    id('auth-confirm-msg').style.display='block';
+  }
+}
+function showLoginForm(){
+  id('auth-login-form').style.display='block';
+  id('auth-confirm-msg').style.display='none';
+  id('au-err').textContent='';
 }
 async function doSignOut(){ await sb.auth.signOut(); location.reload(); }
 
-sb.auth.onAuthStateChange(async(_,session)=>{
+// Hide loading, show correct screen based on auth state
+sb.auth.onAuthStateChange(async(event,session)=>{
+  id('loading-screen').style.display='none';
   if(session?.user){
     currentUser=session.user;
     await loadData();
