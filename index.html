@@ -55,6 +55,34 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .pill-group{display:flex;flex-wrap:wrap;gap:6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:500px){.grid2{grid-template-columns:1fr}}
+
+/* ── Score Page ── */
+.score-input-area{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.score-input-area textarea{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-size:.88rem;line-height:1.7;resize:none;min-height:140px;font-family:inherit}
+.score-actions{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.score-result{margin-top:4px}
+.score-dial{text-align:center;padding:24px 0 16px}
+.score-dial .total{font-size:3.6rem;font-weight:800;line-height:1}
+.score-dial .grade{font-size:1.1rem;font-weight:700;margin-top:6px}
+.score-dial .grade-s{color:#f5c518}.score-dial .grade-a{color:var(--green)}.score-dial .grade-b{color:var(--accent)}.score-dial .grade-c{color:var(--accent2)}.score-dial .grade-d{color:#e05252}
+.score-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.score-bar-label{font-size:.8rem;color:var(--muted);width:80px;flex-shrink:0}
+.score-bar-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:4px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.score-bar-pts{font-size:.8rem;font-weight:700;width:40px;text-align:right;flex-shrink:0}
+.score-detail{margin-top:16px}
+.score-dim{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.score-dim-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.score-dim-name{font-size:.9rem;font-weight:700}
+.score-dim-pts{font-size:.85rem;font-weight:700}
+.score-feedback{font-size:.82rem;color:var(--muted);line-height:1.6}
+.score-feedback .good{color:var(--green)}.score-feedback .warn{color:var(--accent2)}.score-feedback .bad{color:#e05252}
+.score-tag-source{display:inline-block;background:#2a2a3e;border-radius:4px;padding:1px 7px;font-size:.72rem;color:var(--muted);margin:2px 2px 0 0}
+.score-improve{margin-top:14px;background:#1a1a2e;border:1px solid var(--border);border-radius:10px;padding:14px}
+.score-improve h4{font-size:.85rem;font-weight:700;margin-bottom:8px;color:var(--accent2)}
+.score-improve li{font-size:.82rem;color:var(--text);line-height:1.7;margin-left:14px}
+.score-src-badge{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.score-src-badge span{background:#2a2a3e;border-radius:20px;padding:2px 10px;font-size:.72rem;color:var(--muted)}
 .info-box{background:var(--surface2);border-radius:10px;padding:12px}
 .info-box .lb{font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
 .info-box .vl{font-size:.9rem;line-height:1.5}
@@ -152,6 +180,7 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
   <div class="page-wrap" id="page-profile" style="display:none"></div>
   <div class="page-wrap" id="page-topics"  style="display:none"></div>
   <div class="page-wrap" id="page-advice"  style="display:none"></div>
+  <div class="page-wrap" id="page-score"   style="display:none"></div>
   <nav class="bottom-nav">
     <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>定位
@@ -161,6 +190,9 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
     </div>
     <div class="nav-item" id="nav-advice" onclick="showPage('advice')">
       <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>流量建議
+    </div>
+    <div class="nav-item" id="nav-score" onclick="showPage('score')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>評分
     </div>
   </nav>
 </div>
@@ -233,13 +265,14 @@ async function loadData(){
 
 // ─── NAV ───
 function showPage(name){
-  ['profile','topics','advice'].forEach(p=>{
+  ['profile','topics','advice','score'].forEach(p=>{
     id('page-'+p).style.display=p===name?'block':'none';
     id('nav-'+p).classList.toggle('active',p===name);
   });
   if(name==='profile') renderProfile();
   if(name==='topics')  renderTopics();
   if(name==='advice')  renderAdvice();
+  if(name==='score')   renderScorePage();
 }
 
 // ─── CONTENT DATA ───
@@ -1205,6 +1238,236 @@ async function savePerf(){
 function toast(msg,err=false){
   const t=id('toast');t.textContent=msg;t.style.background=err?'#c0392b':'#2d2d2d';
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ─── SCORING ENGINE ───
+function scoreScript(text){
+  const t=text.trim();
+  if(!t) return null;
+  const lines=t.split(/\n/).map(l=>l.trim()).filter(l=>l.length>0);
+  const firstLine=lines[0]||'';
+  const allText=t.toLowerCase();
+  const charCount=t.length;
+  const wordCount=t.replace(/[^一-龥a-zA-Z]/g,'').length;
+
+  // ── DIM 1: Hook 強度 (25pt) ──
+  let hookScore=0; const hookFb=[];
+  const hookPatterns=[
+    {re:/你是不是|你有沒有|你是否|你還在|有多少人/,pts:5,label:'問題式 Hook'},
+    {re:/停止|不要再|別再|你錯了|大錯特錯|你一直|你以為/,pts:5,label:'否定/反向型 Hook'},
+    {re:/\d+%|\d+倍|\d+天|\d+秒|\d+步|\d+個|\d+萬/,pts:5,label:'具體數字型 Hook'},
+    {re:/我發現|沒有人告訴你|大多數人不知道|90%|85%|秘密/,pts:5,label:'好奇心型 Hook'},
+    {re:/以前.*現在|從.*到.*只需|花了.*現在只/,pts:5,label:'對比型 Hook'},
+    {re:/POV|你的.*死了|比你想像.*糟|準備好|不要看這/,pts:4,label:'衝擊型 Hook'},
+  ];
+  let hookMatched=false;
+  for(const p of hookPatterns){
+    if(p.re.test(firstLine)||p.re.test(lines.slice(0,2).join(''))){
+      hookScore+=p.pts; hookFb.push({type:'good',msg:`檢測到「${p.label}」`}); hookMatched=true; break;
+    }
+  }
+  if(!hookMatched){hookFb.push({type:'bad',msg:'開場未使用任何公認 Hook 公式，前 3 秒吸引力弱'});}
+  // Hook 長度（首行≤20字效果最佳）
+  const firstLineLen=firstLine.replace(/[^一-龥a-zA-Z0-9]/g,'').length;
+  if(firstLineLen<=20&&firstLineLen>0){hookScore+=8;hookFb.push({type:'good',msg:`開場句 ${firstLineLen} 字，符合 15-20 字黃金法則`});}
+  else if(firstLineLen>20&&firstLineLen<=35){hookScore+=4;hookFb.push({type:'warn',msg:`開場句 ${firstLineLen} 字，建議壓縮到 20 字內`});}
+  else if(firstLineLen>35){hookFb.push({type:'bad',msg:`開場句 ${firstLineLen} 字過長，IG 介面會被「閱讀更多」截斷`});}
+  // 問題=-hook 心理模型
+  if(/[？?]/.test(firstLine)){hookScore+=7;hookFb.push({type:'good',msg:'以問句開場，觸發大腦解決機制（問題＝-hook 心理模型）'});}
+  else if(hookScore>0){hookScore+=4;}
+  hookScore=Math.min(25,hookScore);
+
+  // ── DIM 2: 演算法適配 (20pt) ──
+  let algoScore=0; const algoFb=[];
+  // SEO 關鍵字密度
+  const seoWords=['AI','人工智能','自動化','效率','健康','流量','漲粉','工具','方法','技巧','系統','策略','變現','收入'];
+  const seoHits=seoWords.filter(w=>allText.includes(w.toLowerCase()));
+  if(seoHits.length>=3){algoScore+=6;algoFb.push({type:'good',msg:`含 ${seoHits.length} 個 IG SEO 關鍵字（${seoHits.slice(0,3).join('、')}…），有助興趣圖譜匹配`});}
+  else if(seoHits.length>=1){algoScore+=3;algoFb.push({type:'warn',msg:`僅含 ${seoHits.length} 個 SEO 關鍵字，建議增加到 3+ 個`});}
+  else{algoFb.push({type:'bad',msg:'缺乏 IG SEO 關鍵字，演算法難以匹配興趣圖譜'});}
+  // 高權重互動訊號
+  const dmSignal=/私訊|dm|DM|傳訊息給我|留言.*告訴我/.test(allText);
+  const shareSignal=/分享給|轉發|Tag.*朋友|傳給/.test(allText);
+  const saveSignal=/收藏|儲存|存起來|先收藏/.test(allText);
+  if(dmSignal){algoScore+=7;algoFb.push({type:'good',msg:'含 DM 引導（2026 最高權重訊號）'});}
+  else if(shareSignal){algoScore+=5;algoFb.push({type:'good',msg:'含分享引導（2026 高權重訊號）'});}
+  else if(saveSignal){algoScore+=4;algoFb.push({type:'warn',msg:'含收藏引導，但 DM/分享權重更高'});}
+  else{algoFb.push({type:'bad',msg:'缺乏高權重互動引導（DM/分享/收藏），演算法訊號弱'});}
+  // 完播率設計（每行帶動下一行）
+  const hasCliffhanger=/原因是|因為|但是|然而|不過|接下來|重點來了|最關鍵的是/.test(allText);
+  if(hasCliffhanger){algoScore+=4;algoFb.push({type:'good',msg:'含「行間推動力」詞語，有助提升觀看完成率'});}
+  else{algoFb.push({type:'warn',msg:'缺乏引導繼續閱讀的過渡詞，完播率可能偏低'});}
+  // 長度適配
+  if(wordCount>=80&&wordCount<=200){algoScore+=3;algoFb.push({type:'good',msg:`${wordCount} 字，符合 60s Reel 腳本長度（80-200 字）`});}
+  else if(wordCount<80){algoFb.push({type:'warn',msg:`${wordCount} 字偏短，內容可能不夠豐富`});}
+  else{algoFb.push({type:'warn',msg:`${wordCount} 字偏長，建議精簡以提升完播率`});}
+  algoScore=Math.min(20,algoScore);
+
+  // ── DIM 3: 內容結構 (20pt) ──
+  let structScore=0; const structFb=[];
+  // 四段結構檢測：開場/問題/解法/CTA
+  const hasOpening=lines.length>0;
+  const hasProblem=/問題|挑戰|困難|痛點|掙扎|苦惱|一直.*沒|為什麼.*不/.test(allText);
+  const hasSolution=/方法|步驟|解決|做法|技巧|訣竅|這樣做|其實你/.test(allText);
+  const hasCTA=/留言|收藏|分享|私訊|追蹤|點擊|DM|dm|儲存/.test(allText);
+  if(hasOpening) structScore+=3;
+  if(hasProblem){structScore+=5;structFb.push({type:'good',msg:'有明確痛點描述（問題段）'});}
+  else{structFb.push({type:'warn',msg:'缺少明確痛點/問題描述，共情感弱'});}
+  if(hasSolution){structScore+=6;structFb.push({type:'good',msg:'有解決方案或方法論（解法段）'});}
+  else{structFb.push({type:'bad',msg:'缺少可執行的解決方案，內容價值偏低'});}
+  if(hasCTA){structScore+=4;structFb.push({type:'good',msg:'有明確行動號召（CTA）'});}
+  else{structFb.push({type:'bad',msg:'缺少 CTA，錯失互動機會'});}
+  // 段落數量
+  if(lines.length>=4&&lines.length<=12){structScore+=2;structFb.push({type:'good',msg:`${lines.length} 行結構清晰，節奏合適`});}
+  else if(lines.length>12){structFb.push({type:'warn',msg:`${lines.length} 行略多，可精簡冗餘段落`});}
+  structScore=Math.min(20,structScore);
+
+  // ── DIM 4: 留存設計 (15pt) ──
+  let retentionScore=0; const retentionFb=[];
+  // 工具價值（讓人收藏）
+  const hasUtility=/步驟|清單|工具|模板|公式|框架|方法|教學|指南|怎麼做/.test(allText);
+  if(hasUtility){retentionScore+=5;retentionFb.push({type:'good',msg:'具備工具性價值（清單/步驟/公式），驅動收藏行為'});}
+  else{retentionFb.push({type:'warn',msg:'缺乏工具性價值，收藏動機低'});}
+  // 社交貨幣（讓人分享）
+  const hasSocialCurrency=/大多數人.*不知道|你的朋友|身邊.*人|竟然|原來|震驚|沒想到|改變了我|一定要分享/.test(allText);
+  if(hasSocialCurrency){retentionScore+=5;retentionFb.push({type:'good',msg:'含社交貨幣元素，驅動分享行為'});}
+  else{retentionFb.push({type:'warn',msg:'缺乏社交貨幣，分享動機低（建議加入「你的朋友一定也需要」類語句）'});}
+  // 心理需求：勝任感
+  const hasCompetence=/學會|掌握|變強|提升|升級|懂得|原來如此/.test(allText);
+  if(hasCompetence){retentionScore+=3;retentionFb.push({type:'good',msg:'讓讀者有「我變強了」的勝任感（SDT 勝任感需求）'});}
+  // 擬人化/口語
+  const isConversational=/我|你|我們|哈|欸|對啊|其實|說真的|老實說/.test(allText);
+  if(isConversational){retentionScore+=2;retentionFb.push({type:'good',msg:'語氣口語化，建立關聯感（SDT 關聯感需求）'});}
+  else{retentionFb.push({type:'warn',msg:'語氣偏書面，建議增加口語化表達'});}
+  retentionScore=Math.min(15,retentionScore);
+
+  // ── DIM 5: CTA 設計 (10pt) ──
+  let ctaScore=0; const ctaFb=[];
+  const ctaDM=/私訊|dm我|DM我|傳訊|傳 我/.test(allText);
+  const ctaShare=/分享給|轉傳|Tag.*朋友|傳給朋友/.test(allText);
+  const ctaSave=/收藏|儲存起來/.test(allText);
+  const ctaComment=/留言|評論|告訴我/.test(allText);
+  const ctaFollow=/追蹤|關注/.test(allText);
+  const ctaCount=[ctaDM,ctaShare,ctaSave,ctaComment,ctaFollow].filter(Boolean).length;
+  if(ctaDM){ctaScore+=8;ctaFb.push({type:'good',msg:'DM 引導（2026 最高權重 CTA，代表強烈用戶關係強度）'});}
+  else if(ctaShare){ctaScore+=7;ctaFb.push({type:'good',msg:'分享引導（2026 高權重，接觸陌生流量引擎）'});}
+  else if(ctaSave){ctaScore+=5;ctaFb.push({type:'good',msg:'收藏引導（內容長尾價值訊號）'});}
+  else if(ctaComment){ctaScore+=4;ctaFb.push({type:'good',msg:'留言引導（+1 機制可提升互動權重）'});}
+  else if(ctaFollow){ctaScore+=2;ctaFb.push({type:'warn',msg:'追蹤引導對演算法訊號幫助有限'});}
+  else{ctaFb.push({type:'bad',msg:'完全沒有 CTA，嚴重浪費互動機會'});}
+  // 單一 CTA 加分
+  if(ctaCount===1){ctaScore+=2;ctaFb.push({type:'good',msg:'只有一個 CTA，符合「單一行動原則」'});}
+  else if(ctaCount>2){ctaFb.push({type:'warn',msg:`${ctaCount} 個 CTA 過多，分散行動意願，建議只保留最高權重的一個`});}
+  ctaScore=Math.min(10,ctaScore);
+
+  // ── DIM 6: 差異化 (10pt) ──
+  let diffScore=10; const diffFb=[];
+  const saturatedPatterns=[
+    {re:/成功的秘訣|成功人士|致富|逆襲|翻轉人生/,label:'過度包裝成功學'},
+    {re:/根據研究.*(?!但|然而)|理論上|學術上.*告訴我們(?!但)/,label:'純理論分享（缺乏實操感）'},
+    {re:/點擊連結|購買|優惠|限時|折扣/,label:'推銷感過重'},
+    {re:/^今天我要.*分享|^大家好.*今天|^嗨大家好/,label:'拖沓的制式開場'},
+    {re:/如果你喜歡.*記得|喜歡.*按個讚.*追蹤/,label:'封閉式敘事（缺乏社交貨幣）'},
+  ];
+  for(const p of saturatedPatterns){
+    if(p.re.test(allText)){diffScore-=2;diffFb.push({type:'bad',msg:`檢測到「${p.label}」飽和模式，建議改寫`});}
+  }
+  // 加分：contrarian 或獨特觀點
+  const hasContrarian=/其實.*錯了|大家都說.*但|主流做法.*問題|停止.*開始|不需要.*需要/.test(allText);
+  if(hasContrarian){diffScore=Math.min(10,diffScore+2);diffFb.push({type:'good',msg:'含反向思考（Contrarian）元素，高參與度潛力'});}
+  if(diffFb.length===0){diffFb.push({type:'good',msg:'未檢測到飽和模式，差異化程度良好'});}
+  diffScore=Math.max(0,Math.min(10,diffScore));
+
+  const total=hookScore+algoScore+structScore+retentionScore+ctaScore+diffScore;
+  const grade=total>=85?'S 爆款潛力':total>=70?'A 高流量':total>=55?'B 正常水準':total>=40?'C 需優化':'D 需重寫';
+  const gradeClass=total>=85?'grade-s':total>=70?'grade-a':total>=55?'grade-b':total>=40?'grade-c':'grade-d';
+
+  return{total,grade,gradeClass,dims:[
+    {name:'Hook 強度',pts:hookScore,max:25,fb:hookFb},
+    {name:'演算法適配',pts:algoScore,max:20,fb:algoFb},
+    {name:'內容結構',pts:structScore,max:20,fb:structFb},
+    {name:'留存設計',pts:retentionScore,max:15,fb:retentionFb},
+    {name:'CTA 設計',pts:ctaScore,max:10,fb:ctaFb},
+    {name:'差異化',pts:diffScore,max:10,fb:diffFb},
+  ]};
+}
+
+function buildScoreHTML(result){
+  if(!result) return'';
+  const barColor=pts=>pts/100>0.8?'var(--green)':pts/100>0.55?'var(--accent)':'var(--accent2)';
+  const pct=(pts,max)=>Math.round(pts/max*100);
+  const fbHTML=items=>items.map(f=>`<span class="${f.type}">${f.type==='good'?'✓':f.type==='warn'?'△':'✗'} ${f.msg}</span>`).join('<br>');
+
+  const bars=result.dims.map(d=>`
+    <div class="score-bar-row">
+      <div class="score-bar-label">${d.name}</div>
+      <div class="score-bar-track"><div class="score-bar-fill" style="width:${pct(d.pts,d.max)}%;background:${barColor(pct(d.pts,d.max)/100)}"></div></div>
+      <div class="score-bar-pts" style="color:${barColor(pct(d.pts,d.max)/100)}">${d.pts}/${d.max}</div>
+    </div>`).join('');
+
+  const dims=result.dims.map(d=>`
+    <div class="score-dim">
+      <div class="score-dim-head">
+        <span class="score-dim-name">${d.name}</span>
+        <span class="score-dim-pts" style="color:${barColor(pct(d.pts,d.max)/100)}">${d.pts} / ${d.max} 分</span>
+      </div>
+      <div class="score-feedback">${fbHTML(d.fb)}</div>
+    </div>`).join('');
+
+  const improveItems=result.dims
+    .filter(d=>d.pts/d.max<0.7)
+    .flatMap(d=>d.fb.filter(f=>f.type!=='good').map(f=>`<li>【${d.name}】${f.msg}</li>`))
+    .join('');
+
+  const improveSec=improveItems?`
+    <div class="score-improve">
+      <h4>🔧 優化建議</h4>
+      <ul>${improveItems}</ul>
+    </div>`:'<div class="score-improve"><h4>🎉 整體表現優異！</h4><ul><li>稿子已符合大多數高流量要素，可直接發佈。</li></ul></div>';
+
+  return`
+    <div class="score-dial">
+      <div class="total">${result.total}</div>
+      <div class="grade ${result.gradeClass}">${result.grade}</div>
+    </div>
+    <div>${bars}</div>
+    <div class="score-detail">${dims}</div>
+    ${improveSec}
+    <div class="score-src-badge">
+      <span>2026 IG 演算法</span><span>Justin Welsh 內容矩陣</span><span>Hook 心理模型</span><span>SDT 自我決定理論</span>
+    </div>`;
+}
+
+function renderScorePage(){
+  const cur=currentTopicKey&&styleRecords[currentTopicKey]?styleRecords[currentTopicKey]:'';
+  id('page-score').innerHTML=`
+    <div class="section-title">稿件流量評分系統</div>
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px">根據 2026 IG 演算法、Hook 心理模型、Justin Welsh 內容矩陣打分</div>
+      <div class="score-input-area">
+        <textarea id="score-text" placeholder="貼上你的稿件文字（腳本、文案、caption 均可）…"></textarea>
+      </div>
+      <div class="score-actions">
+        <button class="btn btn-primary btn-sm" onclick="runScore()">開始評分</button>
+        ${cur?`<button class="btn btn-ghost btn-sm" onclick="loadCurrentScript()">載入今日稿件</button>`:''}
+        <button class="btn btn-ghost btn-sm" onclick="id('score-text').value='';id('score-result').innerHTML=''">清除</button>
+      </div>
+    </div>
+    <div id="score-result" class="score-result"></div>`;
+}
+
+function loadCurrentScript(){
+  if(currentTopicKey&&styleRecords[currentTopicKey]){
+    id('score-text').value=styleRecords[currentTopicKey];
+    runScore();
+  }
+}
+
+function runScore(){
+  const text=id('score-text')?.value||'';
+  if(!text.trim()){toast('請先輸入或貼上稿件文字',true);return;}
+  const result=scoreScript(text);
+  id('score-result').innerHTML=buildScoreHTML(result);
 }
 </script>
 </body>
