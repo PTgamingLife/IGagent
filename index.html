@@ -248,14 +248,18 @@ async function showApp(user){
   id('auth-screen').style.display='none';
   id('app').style.display='none';
   try{
-    await loadData();
-    id('loading-screen').style.display='none';
-    id('app').style.display='flex';
-    showPage('topics');
+    // 8s timeout: even if DB queries fail, still enter app
+    await Promise.race([
+      loadData(),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))
+    ]);
   }catch(e){
-    console.error('loadData failed:',e);
-    showAuth();
+    console.warn('loadData warn:',e.message);
+    // Don't fall back to auth — just enter app with empty data
   }
+  id('loading-screen').style.display='none';
+  id('app').style.display='flex';
+  showPage('topics');
 }
 
 // Auth state changes (handles OAuth redirect + sign-out)
