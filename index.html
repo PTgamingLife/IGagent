@@ -151,14 +151,14 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-screen">
+<!-- LOADING (hidden by default; only shown briefly when restoring session) -->
+<div id="loading-screen" style="display:none">
   <div class="spinner"></div>
   <div style="color:var(--muted);font-size:.85rem">載入中…</div>
 </div>
 
-<!-- AUTH -->
-<div id="auth-screen" style="display:none">
+<!-- AUTH (shown by default) -->
+<div id="auth-screen">
   <div class="auth-card">
     <h1>IG Agent 🤖</h1>
     <p>你的 IG 內容工廠 · 登入開始使用</p>
@@ -235,18 +235,21 @@ async function doGoogleLogin(){
 }
 async function doSignOut(){ await sb.auth.signOut(); location.reload(); }
 
-// ─── AUTH INIT ───
-async function showAuth(){
+// ─── AUTH HELPERS ───
+function showAuth(){
   id('loading-screen').style.display='none';
   id('auth-screen').style.display='flex';
   id('app').style.display='none';
+  currentUser=null; userProfile=null;
 }
 async function showApp(user){
   currentUser=user;
+  id('loading-screen').style.display='flex';
+  id('auth-screen').style.display='none';
+  id('app').style.display='none';
   try{
     await loadData();
     id('loading-screen').style.display='none';
-    id('auth-screen').style.display='none';
     id('app').style.display='flex';
     showPage('topics');
   }catch(e){
@@ -255,24 +258,11 @@ async function showApp(user){
   }
 }
 
-// Primary init: use getSession() — more reliable than waiting for onAuthStateChange
-(async()=>{
-  try{
-    const {data:{session}}=await sb.auth.getSession();
-    if(session?.user) await showApp(session.user);
-    else showAuth();
-  }catch(e){
-    console.error('getSession failed:',e);
-    showAuth();
-  }
-})();
-
-// Handle subsequent auth changes (sign-in/sign-out)
+// Auth state changes (handles OAuth redirect + sign-out)
 sb.auth.onAuthStateChange(async(event,session)=>{
-  if(event==='SIGNED_IN'&&session?.user&&!currentUser){
-    await showApp(session.user);
-  } else if(event==='SIGNED_OUT'){
-    currentUser=null; userProfile=null;
+  if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session?.user){
+    if(!currentUser) await showApp(session.user);
+  } else if(event==='SIGNED_OUT'||(!session&&event==='INITIAL_SESSION')){
     showAuth();
   }
 });
