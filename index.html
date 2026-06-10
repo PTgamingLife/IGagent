@@ -139,12 +139,33 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
       <div class="err" id="au-err"></div>
       <button class="btn btn-primary" onclick="doLogin()">登入</button>
       <button class="btn btn-ghost" onclick="doRegister()">還沒有帳號？註冊</button>
+      <button class="btn btn-ghost" style="margin-top:4px;font-size:.82rem;opacity:.7" onclick="showForgotForm()">忘記密碼？</button>
     </div>
     <div id="auth-confirm-msg" style="display:none;text-align:center;padding:16px 0">
       <div style="font-size:2rem;margin-bottom:12px">📧</div>
       <p style="color:var(--text);font-size:.95rem;margin-bottom:8px">確認信已寄出！</p>
       <p style="color:var(--muted);font-size:.82rem;line-height:1.6">請查收 Email 並點擊確認連結<br>確認後回到此頁登入</p>
       <button class="btn btn-ghost" style="margin-top:16px" onclick="showLoginForm()">返回登入</button>
+    </div>
+    <div id="auth-forgot-form" style="display:none">
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:12px">輸入註冊用的 Email，我們將寄送重設密碼連結</p>
+      <div class="form-group"><label>Email</label><input type="email" id="au-forgot-email" placeholder="you@example.com"></div>
+      <div class="err" id="au-forgot-err"></div>
+      <button class="btn btn-primary" onclick="doForgotPassword()">寄送重設連結</button>
+      <button class="btn btn-ghost" style="margin-top:4px" onclick="showLoginForm()">返回登入</button>
+    </div>
+    <div id="auth-forgot-sent-msg" style="display:none;text-align:center;padding:16px 0">
+      <div style="font-size:2rem;margin-bottom:12px">✉️</div>
+      <p style="color:var(--text);font-size:.95rem;margin-bottom:8px">重設密碼信已寄出！</p>
+      <p style="color:var(--muted);font-size:.82rem;line-height:1.6">請查收 Email 並點擊連結<br>即可設定新密碼</p>
+      <button class="btn btn-ghost" style="margin-top:16px" onclick="showLoginForm()">返回登入</button>
+    </div>
+    <div id="auth-new-pw-form" style="display:none">
+      <p style="color:var(--muted);font-size:.85rem;margin-bottom:12px">請輸入您的新密碼</p>
+      <div class="form-group"><label>新密碼</label><input type="password" id="au-new-pw" placeholder="至少 6 碼"></div>
+      <div class="form-group"><label>確認新密碼</label><input type="password" id="au-new-pw2" placeholder="再輸入一次"></div>
+      <div class="err" id="au-new-pw-err"></div>
+      <button class="btn btn-primary" onclick="doUpdatePassword()">更新密碼</button>
     </div>
   </div>
 </div>
@@ -225,15 +246,49 @@ async function doRegister(){
   }
 }
 function showLoginForm(){
-  id('auth-login-form').style.display='block';
-  id('auth-confirm-msg').style.display='none';
+  ['auth-login-form'].forEach(x=>id(x).style.display='block');
+  ['auth-confirm-msg','auth-forgot-form','auth-forgot-sent-msg','auth-new-pw-form'].forEach(x=>id(x).style.display='none');
   id('au-err').textContent='';
+}
+function showForgotForm(){
+  ['auth-confirm-msg','auth-login-form','auth-forgot-sent-msg','auth-new-pw-form'].forEach(x=>id(x).style.display='none');
+  id('auth-forgot-form').style.display='block';
+  id('au-forgot-err').textContent='';
+}
+async function doForgotPassword(){
+  const email=id('au-forgot-email').value.trim();
+  if(!email){id('au-forgot-err').textContent='請輸入 Email';return;}
+  id('au-forgot-err').textContent='';
+  const {error}=await sb.auth.resetPasswordForEmail(email,{
+    redirectTo:'https://ptgaminglife.github.io/IGagent'
+  });
+  if(error){id('au-forgot-err').textContent=error.message;return;}
+  id('auth-forgot-form').style.display='none';
+  id('auth-forgot-sent-msg').style.display='block';
+}
+async function doUpdatePassword(){
+  const pw=id('au-new-pw').value, pw2=id('au-new-pw2').value;
+  if(pw.length<6){id('au-new-pw-err').textContent='密碼至少 6 碼';return;}
+  if(pw!==pw2){id('au-new-pw-err').textContent='兩次密碼不一致';return;}
+  id('au-new-pw-err').textContent='';
+  const {error}=await sb.auth.updateUser({password:pw});
+  if(error){id('au-new-pw-err').textContent=error.message;return;}
+  showToast('密碼已更新，請重新登入');
+  await sb.auth.signOut();
+  location.reload();
 }
 async function doSignOut(){ await sb.auth.signOut(); location.reload(); }
 
 // Hide loading, show correct screen based on auth state
 sb.auth.onAuthStateChange(async(event,session)=>{
   id('loading-screen').style.display='none';
+  if(event==='PASSWORD_RECOVERY'){
+    id('auth-screen').style.display='flex';
+    id('app').style.display='none';
+    ['auth-login-form','auth-confirm-msg','auth-forgot-form','auth-forgot-sent-msg'].forEach(x=>id(x).style.display='none');
+    id('auth-new-pw-form').style.display='block';
+    return;
+  }
   if(session?.user){
     currentUser=session.user;
     await loadData();
