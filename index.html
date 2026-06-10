@@ -235,24 +235,45 @@ async function doGoogleLogin(){
 }
 async function doSignOut(){ await sb.auth.signOut(); location.reload(); }
 
-// Hide loading, show correct screen based on auth state
-sb.auth.onAuthStateChange(async(event,session)=>{
+// ─── AUTH INIT ───
+async function showAuth(){
   id('loading-screen').style.display='none';
-  if(session?.user){
-    currentUser=session.user;
-    try{
-      await loadData();
-      id('auth-screen').style.display='none';
-      id('app').style.display='flex';
-      showPage('topics');
-    }catch(e){
-      console.error('loadData failed:',e);
-      id('auth-screen').style.display='flex';
-      id('app').style.display='none';
-    }
-  } else {
-    id('auth-screen').style.display='flex';
-    id('app').style.display='none';
+  id('auth-screen').style.display='flex';
+  id('app').style.display='none';
+}
+async function showApp(user){
+  currentUser=user;
+  try{
+    await loadData();
+    id('loading-screen').style.display='none';
+    id('auth-screen').style.display='none';
+    id('app').style.display='flex';
+    showPage('topics');
+  }catch(e){
+    console.error('loadData failed:',e);
+    showAuth();
+  }
+}
+
+// Primary init: use getSession() — more reliable than waiting for onAuthStateChange
+(async()=>{
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(session?.user) await showApp(session.user);
+    else showAuth();
+  }catch(e){
+    console.error('getSession failed:',e);
+    showAuth();
+  }
+})();
+
+// Handle subsequent auth changes (sign-in/sign-out)
+sb.auth.onAuthStateChange(async(event,session)=>{
+  if(event==='SIGNED_IN'&&session?.user&&!currentUser){
+    await showApp(session.user);
+  } else if(event==='SIGNED_OUT'){
+    currentUser=null; userProfile=null;
+    showAuth();
   }
 });
 
