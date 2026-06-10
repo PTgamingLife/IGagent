@@ -185,6 +185,11 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
 <div id="toast"></div>
 
 <script>
+// ─── UTILS (must be first — onAuthStateChange fires synchronously) ───
+const id=x=>document.getElementById(x);
+const v=x=>id(x)?.value.trim()||'';
+const n=x=>parseInt(id(x)?.value)||0;
+
 // ─── SUPABASE ───
 const sb = supabase.createClient(
   'https://hhcubvixldieuwdeqnwc.supabase.co',
@@ -1224,10 +1229,7 @@ async function savePerf(){
   perfData.unshift(data);toast('數據已記錄 ✓');renderAdvice();
 }
 
-// ─── UTILS ───
-const id=x=>document.getElementById(x);
-const v=x=>id(x)?.value.trim()||'';
-const n=x=>parseInt(id(x)?.value)||0;
+// ─── UTILS (defined at top, also kept here for reference) ───
 function toast(msg,err=false){
   const t=id('toast');t.textContent=msg;t.style.background=err?'#c0392b':'#2d2d2d';
   t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);
