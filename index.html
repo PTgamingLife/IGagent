@@ -28,6 +28,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer;transition:opacity .15s}
 .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{opacity:.85}
 .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);margin-top:10px}.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font-size:.95rem;font-weight:600;cursor:pointer;transition:box-shadow .15s,border-color .15s}.btn-google:hover{border-color:#4285F4;box-shadow:0 0 0 2px rgba(66,133,244,.2)}
 .btn-sm{width:auto;padding:8px 18px;font-size:.85rem}
 .err{color:var(--accent2);font-size:.8rem;margin-top:10px;text-align:center;min-height:18px}
 
@@ -133,40 +134,11 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
   <div class="auth-card">
     <h1>IG Agent 🤖</h1>
     <p>你的 IG 內容工廠 · 登入開始使用</p>
-    <div id="auth-login-form">
-      <div class="form-group"><label>Email</label><input type="email" id="au-email" placeholder="you@example.com"></div>
-      <div class="form-group"><label>密碼</label><input type="password" id="au-pw" placeholder="••••••••"></div>
-      <div class="err" id="au-err"></div>
-      <button class="btn btn-primary" onclick="doLogin()">登入</button>
-      <button class="btn btn-ghost" onclick="doRegister()">還沒有帳號？註冊</button>
-      <button class="btn btn-ghost" style="margin-top:4px;font-size:.82rem;opacity:.7" onclick="showForgotForm()">忘記密碼？</button>
-    </div>
-    <div id="auth-confirm-msg" style="display:none;text-align:center;padding:16px 0">
-      <div style="font-size:2rem;margin-bottom:12px">📧</div>
-      <p style="color:var(--text);font-size:.95rem;margin-bottom:8px">確認信已寄出！</p>
-      <p style="color:var(--muted);font-size:.82rem;line-height:1.6">請查收 Email 並點擊確認連結<br>確認後回到此頁登入</p>
-      <button class="btn btn-ghost" style="margin-top:16px" onclick="showLoginForm()">返回登入</button>
-    </div>
-    <div id="auth-forgot-form" style="display:none">
-      <p style="color:var(--muted);font-size:.85rem;margin-bottom:12px">輸入註冊用的 Email，我們將寄送重設密碼連結</p>
-      <div class="form-group"><label>Email</label><input type="email" id="au-forgot-email" placeholder="you@example.com"></div>
-      <div class="err" id="au-forgot-err"></div>
-      <button class="btn btn-primary" onclick="doForgotPassword()">寄送重設連結</button>
-      <button class="btn btn-ghost" style="margin-top:4px" onclick="showLoginForm()">返回登入</button>
-    </div>
-    <div id="auth-forgot-sent-msg" style="display:none;text-align:center;padding:16px 0">
-      <div style="font-size:2rem;margin-bottom:12px">✉️</div>
-      <p style="color:var(--text);font-size:.95rem;margin-bottom:8px">重設密碼信已寄出！</p>
-      <p style="color:var(--muted);font-size:.82rem;line-height:1.6">請查收 Email 並點擊連結<br>即可設定新密碼</p>
-      <button class="btn btn-ghost" style="margin-top:16px" onclick="showLoginForm()">返回登入</button>
-    </div>
-    <div id="auth-new-pw-form" style="display:none">
-      <p style="color:var(--muted);font-size:.85rem;margin-bottom:12px">請輸入您的新密碼</p>
-      <div class="form-group"><label>新密碼</label><input type="password" id="au-new-pw" placeholder="至少 6 碼"></div>
-      <div class="form-group"><label>確認新密碼</label><input type="password" id="au-new-pw2" placeholder="再輸入一次"></div>
-      <div class="err" id="au-new-pw-err"></div>
-      <button class="btn btn-primary" onclick="doUpdatePassword()">更新密碼</button>
-    </div>
+    <div id="au-err" class="err" style="margin-bottom:8px"></div>
+    <button class="btn-google" onclick="doGoogleLogin()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.14 0 5.95 1.08 8.17 2.85l6.1-6.1C34.46 3.19 29.53 1 24 1 14.82 1 7.07 6.48 3.69 14.22l7.12 5.53C12.6 13.62 17.85 9.5 24 9.5z"/><path fill="#4285F4" d="M46.52 24.5c0-1.64-.15-3.22-.42-4.74H24v8.97h12.67c-.55 2.94-2.2 5.43-4.68 7.1l7.16 5.56C43.18 37.56 46.52 31.52 46.52 24.5z"/><path fill="#FBBC05" d="M10.81 28.25A14.54 14.54 0 0 1 9.5 24c0-1.47.25-2.9.69-4.25L3.07 14.22A23.93 23.93 0 0 0 0 24c0 3.87.93 7.53 2.58 10.77l8.23-6.52z"/><path fill="#34A853" d="M24 47c5.53 0 10.17-1.84 13.56-4.97l-7.16-5.56c-1.99 1.34-4.53 2.13-6.4 2.13-6.15 0-11.4-4.12-13.19-9.75l-8.23 6.52C7.07 41.52 14.82 47 24 47z"/></svg>
+      使用 Google 帳號登入
+    </button>
   </div>
 </div>
 
@@ -221,75 +193,19 @@ const sb = supabase.createClient(
 let currentUser=null, userProfile=null, styleRecords={}, perfData=[], regenCount=0, currentTopicKey=null;
 
 // ─── AUTH ───
-async function doLogin(){
-  const {error}=await sb.auth.signInWithPassword({email:v('au-email'),password:v('au-pw')});
+async function doGoogleLogin(){
+  id('au-err').textContent='';
+  const {error}=await sb.auth.signInWithOAuth({
+    provider:'google',
+    options:{redirectTo:'https://ptgaminglife.github.io/IGagent'}
+  });
   if(error) id('au-err').textContent=error.message;
-}
-async function doRegister(){
-  const email=v('au-email'), pw=v('au-pw');
-  if(!email){id('au-err').textContent='請輸入 Email';return;}
-  if(pw.length<6){id('au-err').textContent='密碼至少 6 碼';return;}
-  id('au-err').textContent='';
-  const {error}=await sb.auth.signUp({
-    email, password:pw,
-    options:{emailRedirectTo:'https://ptgaminglife.github.io/IGagent'}
-  });
-  if(error){
-    // If email confirmation is disabled, user is auto-logged in
-    if(error.message.includes('already registered')){
-      id('au-err').textContent='此 Email 已註冊，請直接登入';
-    } else {
-      id('au-err').textContent=error.message;
-    }
-  } else {
-    id('auth-login-form').style.display='none';
-    id('auth-confirm-msg').style.display='block';
-  }
-}
-function showLoginForm(){
-  ['auth-login-form'].forEach(x=>id(x).style.display='block');
-  ['auth-confirm-msg','auth-forgot-form','auth-forgot-sent-msg','auth-new-pw-form'].forEach(x=>id(x).style.display='none');
-  id('au-err').textContent='';
-}
-function showForgotForm(){
-  ['auth-confirm-msg','auth-login-form','auth-forgot-sent-msg','auth-new-pw-form'].forEach(x=>id(x).style.display='none');
-  id('auth-forgot-form').style.display='block';
-  id('au-forgot-err').textContent='';
-}
-async function doForgotPassword(){
-  const email=id('au-forgot-email').value.trim();
-  if(!email){id('au-forgot-err').textContent='請輸入 Email';return;}
-  id('au-forgot-err').textContent='';
-  const {error}=await sb.auth.resetPasswordForEmail(email,{
-    redirectTo:'https://ptgaminglife.github.io/IGagent'
-  });
-  if(error){id('au-forgot-err').textContent=error.message;return;}
-  id('auth-forgot-form').style.display='none';
-  id('auth-forgot-sent-msg').style.display='block';
-}
-async function doUpdatePassword(){
-  const pw=id('au-new-pw').value, pw2=id('au-new-pw2').value;
-  if(pw.length<6){id('au-new-pw-err').textContent='密碼至少 6 碼';return;}
-  if(pw!==pw2){id('au-new-pw-err').textContent='兩次密碼不一致';return;}
-  id('au-new-pw-err').textContent='';
-  const {error}=await sb.auth.updateUser({password:pw});
-  if(error){id('au-new-pw-err').textContent=error.message;return;}
-  showToast('密碼已更新，請重新登入');
-  await sb.auth.signOut();
-  location.reload();
 }
 async function doSignOut(){ await sb.auth.signOut(); location.reload(); }
 
 // Hide loading, show correct screen based on auth state
 sb.auth.onAuthStateChange(async(event,session)=>{
   id('loading-screen').style.display='none';
-  if(event==='PASSWORD_RECOVERY'){
-    id('auth-screen').style.display='flex';
-    id('app').style.display='none';
-    ['auth-login-form','auth-confirm-msg','auth-forgot-form','auth-forgot-sent-msg'].forEach(x=>id(x).style.display='none');
-    id('auth-new-pw-form').style.display='block';
-    return;
-  }
   if(session?.user){
     currentUser=session.user;
     await loadData();
