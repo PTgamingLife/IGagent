@@ -240,10 +240,16 @@ sb.auth.onAuthStateChange(async(event,session)=>{
   id('loading-screen').style.display='none';
   if(session?.user){
     currentUser=session.user;
-    await loadData();
-    id('auth-screen').style.display='none';
-    id('app').style.display='flex';
-    showPage('topics');
+    try{
+      await loadData();
+      id('auth-screen').style.display='none';
+      id('app').style.display='flex';
+      showPage('topics');
+    }catch(e){
+      console.error('loadData failed:',e);
+      id('auth-screen').style.display='flex';
+      id('app').style.display='none';
+    }
   } else {
     id('auth-screen').style.display='flex';
     id('app').style.display='none';
