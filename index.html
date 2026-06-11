@@ -243,11 +243,27 @@ const id=x=>document.getElementById(x);
 const v=x=>id(x)?.value.trim()||'';
 const n=x=>parseInt(id(x)?.value)||0;
 
+// ─── CAPTURE FB OAUTH TOKEN BEFORE SUPABASE INIT ───
+// Must run before supabase.createClient() so Supabase doesn't misread
+// Facebook's access_token from the hash as a Supabase session.
+(function(){
+  try{
+    const p=new URLSearchParams(location.hash.replace('#',''));
+    const st=sessionStorage.getItem('fb_oauth_state');
+    // Facebook hash: has access_token + matching state, but NO "type" param (Supabase-specific)
+    if(st&&p.get('state')===st&&p.has('access_token')&&!p.has('type')){
+      sessionStorage.removeItem('fb_oauth_state');
+      sessionStorage.setItem('fb_pending_token',p.get('access_token'));
+      history.replaceState({},'',location.pathname+location.search);
+    }
+  }catch(e){}
+})();
+
 // ─── SUPABASE ───
 const sb = supabase.createClient(
   'https://hhcubvixldieuwdeqnwc.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoY3Vidml4bGRpZXV3ZGVxbndjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NjcyNDYsImV4cCI6MjA5MTE0MzI0Nn0.zkWxfm0FugSEL9zW6pwDFWPqmRJ3ystOZfU8yRL2lPo',
-  { auth: { flowType: 'implicit', persistSession: false, autoRefreshToken: false } }
+  { auth: { flowType: 'implicit' } }
 );
 
 let currentUser=null, userProfile=null, styleRecords={}, perfData=[], regenCount=0, currentTopicKey=null;
@@ -300,11 +316,21 @@ async function showApp(user){
   showPage('topics');
 }
 
-// Auth state: only handle Google OAuth redirect (SIGNED_IN)
-// INITIAL_SESSION ignored — persistSession:false means no stored tokens
+// Auth state listener
+// INITIAL_SESSION: fires on every page load (handles persisted sessions + FB OAuth return)
+// SIGNED_IN: fires after Google OAuth redirect
 sb.auth.onAuthStateChange(async(event,session)=>{
-  if(event==='SIGNED_IN' && session?.user && !currentUser){
+  if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session?.user&&!currentUser){
     await showApp(session.user);
+    // Process pending FB OAuth token (captured from hash before Supabase init)
+    const fbPending=sessionStorage.getItem('fb_pending_token');
+    if(fbPending){
+      sessionStorage.removeItem('fb_pending_token');
+      fbGetIGAccount(fbPending,localStorage.getItem('ig_fb_app_id'));
+    }
+  } else if(event==='INITIAL_SESSION'&&!session?.user){
+    id('loading-screen').style.display='none';
+    id('auth-screen').style.display='flex';
   } else if(event==='SIGNED_OUT'){
     currentUser=null; userProfile=null;
     showAuth();
@@ -1269,27 +1295,13 @@ function fbStartOAuth(){
   const appId=(id('fb-app-id')?.value||'').trim();
   if(!appId||!/^\d+$/.test(appId)){toast('請輸入有效的 App ID（純數字）',true);return;}
   localStorage.setItem('ig_fb_app_id',appId);
+  // Generate & store state for verification on return
+  const state='fb_'+Math.random().toString(36).substr(2,9);
+  sessionStorage.setItem('fb_oauth_state',state);
   const redirect=encodeURIComponent('https://ptgaminglife.github.io/IGagent/');
   const scope='instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement';
-  const url=`https://www.facebook.com/v22.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirect}&scope=${scope}&response_type=token`;
-  const popup=window.open(url,'fb_oauth','width=620,height=680,left=200,top=100');
-  if(!popup){toast('彈出視窗被封鎖，請允許此網站開啟彈出視窗',true);return;}
-  const msg=id('fb-connect-msg');
-  if(msg) msg.textContent='⏳ 等待授權完成…';
-  const timer=setInterval(()=>{
-    try{
-      const h=popup.location.hash;
-      if(h&&h.includes('access_token=')){
-        clearInterval(timer);
-        const p=new URLSearchParams(h.replace('#',''));
-        const shortToken=p.get('access_token');
-        popup.close();
-        if(msg) msg.textContent='✅ 授權成功，正在取得 IG 帳號資訊…';
-        fbGetIGAccount(shortToken,appId);
-      }
-    }catch(e){/* cross-origin, still loading */}
-    if(popup.closed){clearInterval(timer);if(msg)msg.textContent='';}
-  },600);
+  // Redirect current page (works on mobile + desktop; no popup needed)
+  location.href=`https://www.facebook.com/v22.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirect}&scope=${scope}&response_type=token&state=${state}`;
 }
 
 async function fbGetIGAccount(userToken,appId){
