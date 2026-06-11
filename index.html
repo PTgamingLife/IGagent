@@ -269,9 +269,10 @@ const sb = supabase.createClient(
 let currentUser=null, userProfile=null, styleRecords={}, perfData=[], regenCount=0, currentTopicKey=null;
 
 // ─── FB INTEGRATION STATE ───
+const FB_APP_ID = '1497940802111247';
 function fbState(){
   return{
-    appId:   localStorage.getItem('ig_fb_app_id')||'',
+    appId:   FB_APP_ID,
     token:   localStorage.getItem('ig_fb_page_token')||'',
     uid:     localStorage.getItem('ig_fb_ig_uid')||'',
     name:    localStorage.getItem('ig_fb_ig_name')||'',
@@ -326,7 +327,7 @@ sb.auth.onAuthStateChange(async(event,session)=>{
     const fbPending=sessionStorage.getItem('fb_pending_token');
     if(fbPending){
       sessionStorage.removeItem('fb_pending_token');
-      fbGetIGAccount(fbPending,localStorage.getItem('ig_fb_app_id'));
+      fbGetIGAccount(fbPending);
     }
   } else if(event==='INITIAL_SESSION'&&!session?.user){
     id('loading-screen').style.display='none';
@@ -1271,40 +1272,25 @@ function buildFBConnectCard(){
   return`
     <div class="fb-card">
       <h3>🔗 IG 數據自動同步</h3>
-      <p class="sub">連結後可一鍵取得真實的觀看數、收藏、分享數據（需要 IG 商業帳號連結 FB 粉絲專頁）</p>
-      <details>
-        <summary style="cursor:pointer;font-size:.85rem;color:var(--accent);margin-bottom:10px">▶ 如何建立 Facebook App（首次設定）</summary>
-        <ol class="fb-steps">
-          <li>前往 <a href="https://developers.facebook.com/apps" target="_blank">developers.facebook.com/apps</a> 建立新應用程式（類型選「消費者」或「商業」）</li>
-          <li>在「新增產品」中加入 <strong>Instagram Graph API</strong> 和 <strong>Facebook 登入</strong></li>
-          <li>到「Facebook 登入 → 設定」，在「有效的 OAuth 重新導向 URI」加入：<br><code>https://ptgaminglife.github.io/IGagent/</code></li>
-          <li>在「應用程式設定 → 基本資料」複製 <strong>應用程式編號（App ID）</strong></li>
-          <li>將你自己的 Facebook 帳號加到「角色 → 測試人員」（開發模式下必須）</li>
-          <li>確認你的 IG 帳號已在 IG 設定中連結到 Facebook 粉絲專頁</li>
-        </ol>
-      </details>
-      <div class="fb-token-input">
-        <input id="fb-app-id" placeholder="貼上你的 Facebook App ID（純數字）" value="${s.appId}">
-        <button class="btn btn-primary btn-sm" onclick="fbStartOAuth()">連結 Facebook 帳號</button>
+      <p class="sub">連結你的 Instagram 商業帳號，一鍵取得真實的觀看數、收藏、分享數據</p>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:14px">
+        需要：IG 商業帳號或創作者帳號，且已在 IG 設定中連結到 Facebook 粉絲專頁
       </div>
-      <div id="fb-connect-msg" style="font-size:.8rem;color:var(--muted)"></div>
+      <button class="btn btn-primary btn-sm" onclick="fbStartOAuth()">連結 Instagram 帳號</button>
     </div>`;
 }
 
 function fbStartOAuth(){
-  const appId=(id('fb-app-id')?.value||'').trim();
-  if(!appId||!/^\d+$/.test(appId)){toast('請輸入有效的 App ID（純數字）',true);return;}
-  localStorage.setItem('ig_fb_app_id',appId);
   // Generate & store state for verification on return
   const state='fb_'+Math.random().toString(36).substr(2,9);
   sessionStorage.setItem('fb_oauth_state',state);
   const redirect=encodeURIComponent('https://ptgaminglife.github.io/IGagent/');
   const scope='instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement';
   // Redirect current page (works on mobile + desktop; no popup needed)
-  location.href=`https://www.facebook.com/v22.0/dialog/oauth?client_id=${appId}&redirect_uri=${redirect}&scope=${scope}&response_type=token&state=${state}`;
+  location.href=`https://www.facebook.com/v22.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${redirect}&scope=${scope}&response_type=token&state=${state}`;
 }
 
-async function fbGetIGAccount(userToken,appId){
+async function fbGetIGAccount(userToken){
   const msg=id('fb-connect-msg');
   try{
     // Step 1: get FB pages (page token has more permissions than user token)
@@ -1323,7 +1309,6 @@ async function fbGetIGAccount(userToken,appId){
     localStorage.setItem('ig_fb_page_token',page.access_token);
     localStorage.setItem('ig_fb_ig_uid',igId);
     localStorage.setItem('ig_fb_ig_name',ig.username||igId);
-    if(appId) localStorage.setItem('ig_fb_app_id',appId);
 
     toast('成功連結 @'+(ig.username||igId)+' ✓');
     renderAdvice();
@@ -1461,7 +1446,7 @@ function fbTokenExpired(){
 }
 
 function fbDisconnect(){
-  ['ig_fb_app_id','ig_fb_page_token','ig_fb_ig_uid','ig_fb_ig_name'].forEach(k=>localStorage.removeItem(k));
+  ['ig_fb_page_token','ig_fb_ig_uid','ig_fb_ig_name'].forEach(k=>localStorage.removeItem(k));
   toast('已中斷 IG 連結');
   renderAdvice();
 }
