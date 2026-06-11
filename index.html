@@ -1281,13 +1281,16 @@ function buildFBConnectCard(){
 }
 
 function fbStartOAuth(){
-  // Generate & store state for verification on return
   const state='fb_'+Math.random().toString(36).substr(2,9);
   sessionStorage.setItem('fb_oauth_state',state);
-  const redirect=encodeURIComponent('https://ptgaminglife.github.io/IGagent/');
-  const scope='instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement';
-  // Redirect current page (works on mobile + desktop; no popup needed)
-  location.href=`https://www.facebook.com/v22.0/dialog/oauth?client_id=${FB_APP_ID}&redirect_uri=${redirect}&scope=${scope}&response_type=token&state=${state}`;
+  const params=new URLSearchParams({
+    client_id: FB_APP_ID,
+    redirect_uri: 'https://ptgaminglife.github.io/IGagent/',
+    scope: 'pages_show_list,pages_read_engagement,instagram_basic',
+    response_type: 'token',
+    state: state
+  });
+  location.href=`https://www.facebook.com/v22.0/dialog/oauth?${params.toString()}`;
 }
 
 async function fbGetIGAccount(userToken){
