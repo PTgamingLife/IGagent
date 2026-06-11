@@ -1286,11 +1286,11 @@ function fbStartOAuth(){
   const params=new URLSearchParams({
     client_id: FB_APP_ID,
     redirect_uri: 'https://ptgaminglife.github.io/IGagent/',
-    scope: 'pages_show_list,pages_read_engagement,instagram_basic',
+    scope: 'public_profile',
     response_type: 'token',
     state: state
   });
-  location.href=`https://www.facebook.com/v22.0/dialog/oauth?${params.toString()}`;
+  location.href=`https://www.facebook.com/dialog/oauth?${params.toString()}`;
 }
 
 async function fbGetIGAccount(userToken){
