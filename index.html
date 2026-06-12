@@ -270,6 +270,9 @@ let currentUser=null, userProfile=null, styleRecords={}, perfData=[], regenCount
 
 // ─── FB INTEGRATION STATE ───
 const FB_APP_ID = '1497940802111247';
+// Facebook Login for Business configuration ID (required for Business-type apps).
+// Create at: App Dashboard → Facebook Login for Business → Configurations
+const FB_CONFIG_ID = '';
 function fbState(){
   return{
     appId:   FB_APP_ID,
@@ -1286,11 +1289,13 @@ function fbStartOAuth(){
   const params=new URLSearchParams({
     client_id: FB_APP_ID,
     redirect_uri: 'https://ptgaminglife.github.io/IGagent/',
-    scope: 'public_profile',
     response_type: 'token',
     state: state
   });
-  location.href=`https://www.facebook.com/dialog/oauth?${params.toString()}`;
+  // Business-type apps use Facebook Login for Business: requires config_id, scope is rejected
+  if(FB_CONFIG_ID) params.set('config_id',FB_CONFIG_ID);
+  else params.set('scope','pages_show_list,pages_read_engagement,instagram_basic,instagram_manage_insights');
+  location.href=`https://www.facebook.com/v22.0/dialog/oauth?${params.toString()}`;
 }
 
 async function fbGetIGAccount(userToken){
