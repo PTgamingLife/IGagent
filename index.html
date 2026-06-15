@@ -266,7 +266,7 @@ const sb = supabase.createClient(
   { auth: { flowType: 'implicit' } }
 );
 
-let currentUser=null, userProfile=null, styleRecords={}, perfData=[], regenCount=0, currentTopicKey=null;
+let currentUser=null, userProfile=null, styleRecords={}, perfData=[], regenCount=0, currentTopicKey=null, aiTopics=null;
 
 // ─── FB INTEGRATION STATE ───
 const FB_APP_ID = '1497940802111247';
@@ -1156,9 +1156,32 @@ async function saveProfile(){
 
 // ─── PAGE 2: TOPICS ───
 function renderTopics(){
-  const el=id('page-topics'),keys=pickTopics();
+  const el=id('page-topics');
   const hint=styleHint();
   const d=new Date(),ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  if(aiTopics){
+    el.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div>
+          <div style="font-size:1.05rem;font-weight:700">✨ AI 生成主題</div>
+          <div style="font-size:.78rem;color:var(--muted)">${ds} · 根據你的定位客製化</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="font-size:.72rem" onclick="aiTopics=null;renderTopics()">精選主題</button>
+      </div>
+      ${aiTopics.map((t,i)=>`
+        <div class="topic-card" onclick="openAIDetail(${i})">
+          <div class="topic-meta">
+            <span class="tag tag-a">✨ ${t.theme}</span>
+            <span class="tag tag-o">${t.style}</span>
+            <span class="tag" style="color:var(--muted)">${t.format}</span>
+          </div>
+          <div class="topic-hook">${t.hook}</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:6px">💡 ${t.why}</div>
+        </div>`).join('')}
+      <button class="regen-btn" onclick="genAITopics()">✨ 重新 AI 生成</button>`;
+    return;
+  }
+  const keys=pickTopics();
   el.innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div><div style="font-size:1.05rem;font-weight:700">今日主題</div><div style="font-size:.78rem;color:var(--muted)">${ds}</div></div>
@@ -1178,9 +1201,67 @@ function renderTopics(){
         <div class="topic-hook">${c.hook}</div>
       </div>`;
     }).join('')}
-    <button class="regen-btn" onclick="regenT()">↻ 重新抽取今日三主題</button>`;
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="regen-btn" style="flex:1" onclick="regenT()">↻ 重新抽取</button>
+      <button class="regen-btn" style="flex:1;background:linear-gradient(135deg,#6e40c9,#2563eb);color:#fff;border:none" onclick="genAITopics()">✨ AI 生成</button>
+    </div>`;
 }
 function regenT(){regenCount++;renderTopics();}
+
+async function genAITopics(){
+  const el=id('page-topics');
+  const p=userProfile||{};
+  // show loading
+  const cards=el.querySelectorAll('.topic-card');
+  cards.forEach(c=>c.style.opacity='0.4');
+  const btns=el.querySelectorAll('.regen-btn');
+  btns.forEach(b=>{b.disabled=true;b.textContent='✨ AI 生成中…';});
+  try{
+    const{data,error}=await sb.functions.invoke('generate-topics',{
+      body:{
+        niche: p.niche||'',
+        target_audience: p.target_audience||'',
+        identity_label: p.identity_label||'',
+        solve_problem: p.solve_problem||'',
+        deliver_result: p.deliver_result||'',
+        use_method: p.use_method||''
+      }
+    });
+    if(error) throw new Error(error.message);
+    if(!data?.topics?.length) throw new Error('無效回應');
+    aiTopics=data.topics;
+    renderTopics();
+    toast('AI 已生成 3 個客製化主題 ✨');
+  }catch(e){
+    toast('AI 生成失敗：'+e.message,true);
+    renderTopics();
+  }
+}
+
+function openAIDetail(idx){
+  const t=aiTopics[idx];
+  const styleMap={'方法型':'edu','名單型':'edu','數據型':'edu','故事型':'pain','動機型':'pain','反骨型':'fix','對比型':'fix'};
+  const tmplKey=styleMap[t.style]||'edu';
+  const tmpl=SOP.templates[tmplKey];
+  id('detail-body').innerHTML=`
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="tag tag-a">✨ ${t.theme}</span>
+      <span class="tag tag-o">${t.style}</span>
+      <span class="tag" style="color:var(--muted)">${t.format}</span>
+    </div>
+    <div class="card"><div class="section-title">🎯 AI 生成 Hook</div><div class="hook-box">${t.hook}</div></div>
+    <div class="card"><div class="section-title">💡 為何有潛力</div><div style="font-size:.88rem;line-height:1.7;color:var(--text)">${t.why}</div></div>
+    <div class="card">
+      <div class="section-title">📐 SOP 腳本模板（依你風格填空）</div>
+      <div class="script-box">${tmpl}</div>
+    </div>
+    <div class="card">
+      <div style="font-size:.83rem;color:var(--muted);margin-bottom:8px">✏️ 依模板寫你的版本</div>
+      <textarea class="ea" id="edit-area" placeholder="把上方模板的___填入你自己的內容…"></textarea>
+    </div>`;
+  id('detail-overlay').classList.add('open');
+  id('detail-overlay').scrollTop=0;
+}
 
 // ─── DETAIL ───
 function openDetail(key){
