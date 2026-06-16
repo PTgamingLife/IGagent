@@ -266,7 +266,7 @@ const sb = supabase.createClient(
   { auth: { flowType: 'implicit' } }
 );
 
-let currentUser=null, userProfile=null, styleRecords={}, perfData=[], regenCount=0, currentTopicKey=null, aiTopics=null;
+let currentUser=null, userProfile=null, styleRecords={}, perfData=[], currentTopicKey=null, aiTopics=null;
 
 // ─── FB INTEGRATION STATE ───
 const FB_APP_ID = '1497940802111247';
@@ -366,582 +366,6 @@ function showPage(name){
   if(name==='score')   renderScorePage();
 }
 
-// ─── CONTENT DATA ───
-const THEMES=[
-  {id:'ai-tools', name:'AI 工具實測',    emoji:'🤖'},
-  {id:'workflow', name:'工作流程自動化',  emoji:'⚡'},
-  {id:'health',   name:'健康管理 × 科技', emoji:'🏥'},
-  {id:'dad-life', name:'中年工程師奶爸',  emoji:'👨‍👧'},
-  {id:'ai-edu',   name:'AI 教學入門',     emoji:'📚'},
-  {id:'anti-guru',name:'破解 AI 迷思',    emoji:'🔥'},
-];
-const STYLES=[
-  {id:'action',     name:'行動指南',tag:'方法型'},
-  {id:'story',      name:'故事型',  tag:'共鳴型'},
-  {id:'contrarian', name:'反向思考',tag:'反骨型'},
-  {id:'data',       name:'數據分析',tag:'數據型'},
-  {id:'list',       name:'清單收藏',tag:'工具型'},
-  {id:'motivation', name:'動機激勵',tag:'心態型'},
-];
-
-const CM={
-'ai-tools+action':{
-  hook:'3 個步驟，讓你花 5 分鐘搞懂一個新 AI 工具',
-  structure:['先問它「你能幫我做什麼？」—讓 AI 自我介紹，省 80% 摸索時間','給它你的真實情境，看它能不能解決你「今天的問題」','找它的邊界：故意問超綱，了解限制，避免誤用'],
-  script:`[開場 0–10s]
-你有沒有花了三天試一個 AI 工具，還是搞不清楚它到底能做什麼？
-
-[問題 10–25s]
-問題不在工具難用，在於我們根本沒有「快速上手的框架」。
-
-[解法 25–50s]
-我的方法是三步——
-第一步，讓它自介：問它「你最擅長幫我做什麼？」
-第二步，給真實情境：用你今天真正遇到的問題測試它。
-第三步，找它的極限：故意問超綱，知道它在哪裡不行。
-
-[結尾 50–60s]
-10 分鐘，就能判斷這個工具值不值得繼續用。存起來，下次試新工具就用這個。`,
-  caption:`你有沒有試過一個 AI 工具，用了三天卻完全搞不清楚它到底能做什麼？
-
-後來我發現：問題不在工具難用，在於我們根本沒有「快速上手的框架」。
-
-現在每次遇到新工具，我都用這 3 步驟——存起來下次用。`,
-  cta:['儲存起來下次用 🔖','你最近試了什麼 AI 工具？'],
-  format:'輪播貼文',signal:'Saves'
-},
-'ai-tools+contrarian':{
-  hook:'停止追 AI 工具。它正在讓你的效率越來越差',
-  structure:['迷思：工具越多 = 越有生產力','真相：工具切換成本每天吃掉你 90 分鐘','更好的做法：先確認痛點，再找工具'],
-  script:`[開場 0–8s]
-我說一個可能讓你不舒服的觀察——追 AI 工具最積極的人，往往生產力最低。
-
-[核心 8–35s]
-不是因為工具不好，是因為他們在用「找工具」這個行為逃避真正的工作。
-我做了個實驗：一個月內把工具從十幾個砍到四個。結果反而多完成了 30% 的任務。
-
-[原因 35–50s]
-原因很簡單——工具切換有隱性成本。每次切換，大腦要重新進入狀態。
-
-[結尾 50–60s]
-工具是解法，不是目標。先搞清楚你要解決什麼問題，再找工具。`,
-  caption:`追 AI 工具最積極的人，往往生產力最低。
-
-不是因為工具不好，是因為他們在用「找工具」這個行為逃避真正的工作。
-
-工具是解法，不是目標。`,
-  cta:['你同意嗎？留言開戰 👇','轉發給每天推薦新工具的朋友 😅'],
-  format:'Reels',signal:'Shares + Comments'
-},
-'ai-tools+story':{
-  hook:'我花了 3 個月試了 27 個 AI 工具，最後只留下 4 個',
-  structure:['痛點：每週花 6 小時寫內容，身心俱疲','踩雷：大多數推薦工具用一次就刪','轉折：工具好不好用取決於能否融入工作流','最後留下的 4 個工具'],
-  script:`[開場 0–10s]
-三個月，我試了 27 個 AI 工具。最後只留下 4 個。
-
-[故事 10–35s]
-剛開始的我，每個月都在追新工具。什麼大師推薦，就去試什麼。
-結果桌面一堆 App，工作流反而更混亂。
-直到我開始用一個標準：這個工具能幫我省超過 30 分鐘嗎？通不過就砍。
-
-[轉折 35–50s]
-砍完之後，剩下 4 個。這 4 個，每天都在用，每天都省時間。
-
-[結尾 50–60s]
-留下來的工具，不是最強的，是最適合你工作流的。`,
-  caption:`老實說，我剛開始用 AI 工具的時候，每個月都在追新工具。結果桌面一堆 App，工作流更混亂。
-
-直到我用一個標準篩選：「這個工具能幫我省超過 30 分鐘嗎？」通不過就砍。
-
-最後留下來的 4 個，每天都在用。`,
-  cta:['留言告訴我你最離不開哪個','分享給也在追工具的朋友 👥'],
-  format:'Reels 或輪播',signal:'DMs + Shares'
-},
-'ai-tools+data':{
-  hook:'90% 的人不知道：AI 工具有效率提升，數字到底是多少？',
-  structure:['研究數據：有系統使用 AI 每週平均省 4.2 小時','投報率最高的工具類別','最多人低估的隱性時間成本'],
-  script:`[開場 0–10s]
-有沒有人真的算過：用 AI 工具到底省了多少時間？
-
-[數據 10–35s]
-研究顯示，有系統使用 AI 工具的工作者，平均每週省下 4.2 小時。
-聽起來不多？一年就是 218 小時——將近 9 天的時間。
-但同一份研究也發現：只有 23% 的人達到這個水準。其他人其實沒省多少。
-
-[關鍵 35–50s]
-差距在哪？在於有沒有「系統性地用」，而不是隨機亂試。
-
-[結尾 50–60s]
-問題不是 AI 能省時嗎，而是你有沒有在系統性地用它。`,
-  caption:`數字不會說謊，但我們常常忽略數字。
-
-研究顯示有系統使用 AI 的工作者，平均每週省 4.2 小時——一年將近 9 天。
-
-問題不是「AI 能省時嗎」，而是「你有沒有在系統性地用它」。`,
-  cta:['收藏這個數據 📊','你每週大概省了幾小時？'],
-  format:'輪播貼文',signal:'Saves + Shares'
-},
-'ai-tools+list':{
-  hook:'每個 AI 工具控必備的 7 個評測框架（付費前先問這些）',
-  structure:['問題 1：免費版夠不夠你用？','問題 2：能不能融入現有工作流？','問題 3：退出成本有多高？','問題 4：它在哪裡不行？'],
-  script:`[開場 0–8s]
-付費 AI 工具之前，我都會問自己這 7 個問題。避免我再次浪費訂閱費。
-
-[清單 8–45s]
-第一：這個工具解決的問題，我每週至少遇到幾次？少於 3 次，不值得付費。
-第二：免費版夠用嗎？很多工具免費版已經足夠 80% 的使用情境。
-第三：能不能融入我現有的工作流？要換工作流才能用的工具，通常用不長久。
-第四：退出成本有多高？我的資料會不會被鎖死在這個平台？
-到這邊先停——這四個問題，能過濾掉 70% 的衝動訂閱。
-
-[結尾 45–60s]
-存起來，下次你遇到「要不要買」的時刻就用得到。`,
-  caption:`付費 AI 工具之前，我都會問自己這 7 個問題。
-
-避免我再次浪費訂閱費。
-
-存起來，下次你遇到「要不要買」的時刻就用得到。`,
-  cta:['存起來備用 🔖','你有自己的評估方式嗎？'],
-  format:'輪播貼文',signal:'Saves'
-},
-'ai-tools+motivation':{
-  hook:'你不缺 AI 工具，你缺的是一套「使用哲學」',
-  structure:['工具焦慮的根源：資訊過載 + FOMO','觀念轉換：你是工具的主人，不是工具的學生','建立個人 AI Stack 的心態框架'],
-  script:`[開場 0–8s]
-有時候，我看著電腦裡一堆 AI 工具，突然有點迷失——到底是工具幫我，還是我在幫工具？
-
-[核心 8–40s]
-真正有效率的人，用的工具不多，但用得很深。
-不是拒絕新工具，而是先把手上的用到極致。
-這背後是一個使用哲學：工具是你的延伸，不是你的方向。
-你知道自己要去哪，再找工具幫你去得更快。
-不知道自己要去哪，再多工具只會讓你更迷失。
-
-[結尾 40–60s]
-不是拒絕新工具，是先把手上的用到極致。`,
-  caption:`有時候，我看著自己電腦裡一堆 AI 工具，突然有點迷失。
-
-到底是工具幫我，還是我在幫工具？
-
-真正有效率的人用的工具不多，但用得很深。`,
-  cta:['這句話存起來 💡','你目前主力在用哪個工具？'],
-  format:'純文字 Reel 或單圖',signal:'Saves + DMs'
-},
-'workflow+action':{
-  hook:'5 個可以今天就開始的工作自動化（不用寫程式）',
-  structure:['自動整理 Gmail 分類標籤','會議記錄自動轉成行動清單','社群貼文排程批次設定','重複回覆用 AI 範本秒回','每週報告自動彙整'],
-  script:`[開場 0–8s]
-我曾經每天花兩小時在「重複做同一件事」。現在這兩小時幫我自動完成了。
-
-[核心 8–45s]
-不是我變聰明，是我懶對了方向。今天分享 5 個不需要寫程式就能做到的自動化：
-一、Gmail 自動分類——不用再手動整理信件。
-二、會議記錄轉行動清單——Otter 加 AI 摘要，開完會就有任務清單。
-三、社群貼文批次排程——一次設定，一週搞定。
-四、重複性回覆用 AI 範本——節省 50% 溝通時間。
-五、每週報告自動彙整——再也不用每週五加班。
-
-[結尾 45–60s]
-這五個我都在用，每個設定時間不超過 10 分鐘。存起來，這週選一個先試。`,
-  caption:`我曾經每天花 2 小時在「重複做同一件事」。現在這 2 小時已經幫我自動完成了。
-
-不是我變聰明，是我懶對了方向。
-
-這 5 個自動化，都不需要寫一行程式。存起來週末試試看。`,
-  cta:['存起來週末試試看 🔖','你最想自動化哪一個？'],
-  format:'輪播貼文',signal:'Saves'
-},
-'workflow+contrarian':{
-  hook:'停止用 Todo List。它是你效率低落的罪魁禍首',
-  structure:['Todo List 的陷阱：感覺努力，沒移動重要的事','真正問題：管理「任務」而非「時間區塊」','替代方案：時間封鎖 + AI 排程助理'],
-  script:`[開場 0–8s]
-我用 Todo List 用了五年，越用越焦慮。
-
-[問題 8–30s]
-每天劃掉的項目越多，清單反而越長。
-後來我才發現問題：我在管理「什麼要做」，卻完全沒有管理「什麼時候做」。
-一個沒有時間框的任務，永遠都是未完成狀態。
-
-[解法 30–50s]
-我換成時間封鎖法：不是列清單，是把任務直接排進行事曆。
-加上 AI 幫我排優先順序——現在我的一天從「清單焦慮」變成「可預測的時間地圖」。
-
-[結尾 50–60s]
-兩行字的清單，不如一個時間封鎖。試試看。`,
-  caption:`我用 Todo List 用了 5 年，越用越焦慮。每天劃掉的越多，清單反而越長。
-
-後來我才發現問題：我在管理「什麼要做」，卻完全沒有管理「什麼時候做」。`,
-  cta:['你還在用 Todo List 嗎？','分享給也有清單焦慮的朋友'],
-  format:'Reels',signal:'Shares + Comments'
-},
-'workflow+story':{
-  hook:'我廁所錄影片的原因，不是我懶，是我只有那 3 分鐘',
-  structure:['現實：工程師奶爸的時間只有碎片','解法：把工作流壓縮到最小可執行單位','系統：哪些事可以廁所時間完成'],
-  script:`[開場 0–8s]
-老婆問我為什麼一直在廁所那麼久——因為那是我唯一不被打擾的 3 分鐘。
-
-[展開 8–40s]
-我的很多影片草稿，都是廁所時間完成的。不是開玩笑。
-帶小孩之後，我再也沒有整塊的時間了。
-所以我開始思考：哪些事可以在 3 分鐘內完成一個有意義的進度？
-語音輸入草稿——可以。快速回覆 DM——可以。
-決定明天最重要一件事——可以。
-
-[結論 40–60s]
-有效率不是你有很多時間，是你把僅有的時間用到極致。
-如果你也在碎片時間掙扎，留言告訴我，我有一套碎片工作流可以分享給你。`,
-  caption:`老婆問我為什麼一直在廁所那麼久。因為那是我唯一不被打擾的 3 分鐘。
-
-不是開玩笑，我的很多影片草稿都是廁所時間完成的。`,
-  cta:['廁所黨舉手 🙋','分享給跟我一樣忙的爸媽'],
-  format:'Reels',signal:'Shares + DMs'
-},
-'health+contrarian':{
-  hook:'停止計算卡路里。對大多數人來說，它根本沒有用',
-  structure:['迷思：卡路里計算 = 健康管理','真相：熱量品質比數量更重要','更有效方案：血糖曲線 + 飲食時序'],
-  script:`[開場 0–8s]
-我是健康管理師，但我從來不叫病人算卡路里。
-
-[核心 8–35s]
-不是因為算錯，是因為算了也沒用。
-兩種食物熱量一樣，但對你血糖的影響可以差三倍。
-血糖一波動，飢餓感就失控，接著過量飲食——
-然後你說「我明明算了卡路里，怎麼還是沒效？」
-問題不在計算，在你算的東西根本沒有抓到關鍵。
-
-[解法 35–52s]
-真正有效的，是管理血糖曲線：先吃蔬菜蛋白質，再吃澱粉。
-飲食順序這一件事，比計算一百個卡路里更有效。
-
-[結尾 52–60s]
-這是北醫健康管理的核心概念，不是我自創的。如果你想了解更多，存起來。`,
-  caption:`我是健康管理師，但我從來不叫病人算卡路里。
-
-不是因為算錯，是因為算了也沒用。
-
-減重真正的關鍵是血糖的穩定，不是熱量的計算。這兩件事不一樣。`,
-  cta:['這個觀點你同意嗎？','分享給還在算卡路里的朋友'],
-  format:'Reels',signal:'Shares + Comments'
-},
-'health+story':{
-  hook:'我媽媽被診斷糖尿病那天，我才認真去念了健康管理',
-  structure:['觸發點：家人健康危機','過程：工程師跨領域讀北醫健康管理','轉折：用 AI 設計個人化健康方案','成果：媽媽血糖第一個月就改善'],
-  script:`[開場 0–10s]
-我不是從小就對健康有熱情的人。我本來只是個普通工程師。
-
-[故事 10–35s]
-直到我媽媽被診斷出糖尿病。那一刻我才意識到：
-我有能力幫她，但我沒有知識。所以我去讀了健康管理。
-在北醫的課程裡，我學到了很多顛覆認知的東西——
-關於血糖、關於代謝、關於為什麼努力運動卻瘦不下來的真相。
-
-[轉折 35–52s]
-後來我把這些知識結合 AI 工具，幫我媽設計個人化飲食計畫。
-第一個月，她的血糖數值就有明顯改善。
-
-[結尾 52–60s]
-現在我把這些知識和工具分享出來，希望讓更多人少走彎路。身邊有需要的人，歡迎分享給他們。`,
-  caption:`我不是從小就對健康有熱情的人。我本來只是個普通的工程師，直到我媽媽被診斷出糖尿病。
-
-那一刻我才意識到：我有能力幫她，但我沒有知識。所以我去讀了。`,
-  cta:['你身邊有需要這些資訊的人嗎？','DM 我，我把相關資源整理給你'],
-  format:'輪播 or Reels',signal:'DMs + Saves'
-},
-'health+data':{
-  hook:'我追蹤了 90 天睡眠數據：影響隔天效率最大的不是睡眠時間',
-  structure:['追蹤方法：HRV、深睡比例、入睡時間','意外發現：7 小時淺眠 < 6 小時深睡','影響深睡的三個關鍵行為'],
-  script:`[開場 0–10s]
-我以為睡夠 8 小時就夠了。直到我開始追蹤數據，才發現我的深睡比例只有 12%。
-
-[核心 10–40s]
-難怪我每天睡夠了還是很累——因為我睡的是「假的睡眠」。
-90 天追蹤下來，我發現影響深睡最大的三件事：
-第一，睡前 2 小時停止攝取咖啡因，包括你以為無害的綠茶。
-第二，室溫降到 18–20 度，大腦需要降溫才能進入深睡。
-第三，睡前 30 分鐘不看螢幕——不是因為藍光，是因為訊息刺激大腦保持警戒。
-
-[結尾 40–60s]
-90 天後，我把深睡比例從 12% 提升到 22%。早上的狀態完全不同了。`,
-  caption:`我以為睡夠 8 小時就夠了。直到我開始追蹤數據，才發現我的深睡比例只有 12%。
-
-難怪我每天睡夠了還是很累。
-
-90 天後，深睡從 12% 提升到 22%。早上的狀態完全不同了。`,
-  cta:['存起來 📊','你也在追蹤睡眠嗎？'],
-  format:'輪播貼文',signal:'Saves + DMs'
-},
-'dad-life+story':{
-  hook:'POV：帶小孩帶到一半，突然想到工作的 bug，但不能去修',
-  structure:['工程師爸爸的雙重身份焦慮','人在陪小孩，腦袋卡在程式碼','「當下在場」原則','離開螢幕反而讓問題自己解決'],
-  script:`[開場 0–8s]
-有沒有那種感覺：人在陪小孩，腦子在想 PR review。
-
-[展開 8–38s]
-全程心不在焉，兩件事都沒做好。
-孩子覺得你沒有陪他，你覺得工作也沒推進——雙輸。
-我花了很長時間才學到一件事：當爸爸的時候，就好好當爸爸。
-而且有個你可能沒想到的好處——
-很多我在電腦前卡住的問題，離開螢幕去陪小孩之後，
-腦子轉了一圈，回來就想到解法了。
-大腦需要留白，不是強迫它一直運轉。
-
-[結尾 38–60s]
-bug 不會因為你擔心它就自己消失，但孩子的童年會。`,
-  caption:`有沒有那種感覺：人在陪小孩，腦子在想 PR review。全程心不在焉，兩件事都沒做好。
-
-當爸爸的時候，就好好當爸爸。
-bug 不會因為你擔心它就自己消失，但孩子的童年會。`,
-  cta:['工程師爸媽按個讚 ❤️','分享給有同感的工作狂爸爸'],
-  format:'Reels',signal:'Shares + DMs'
-},
-'dad-life+motivation':{
-  hook:'你不需要等孩子長大才能做自己想做的事',
-  structure:['「等他大一點」的陷阱：永遠有下一個等待理由','碎片時間的真實潛力','用 AI 把準備時間壓縮到最小'],
-  script:`[開場 0–8s]
-我身邊很多爸媽說：「等孩子大一點，我就要開始做___。」
-
-[核心 8–40s]
-但孩子大了之後，又有另一個理由等。永遠有下一個「等一等」。
-我有一個朋友，他說等孩子上小學再開始寫作。孩子上小學了，他說等孩子自己寫功課再說。
-我自己也曾經是這樣，直到我意識到：時間不會等我準備好。
-廁所 3 分鐘也是 3 分鐘。每天的通勤也是時間。睡前 20 分鐘也是空間。
-
-[結尾 40–60s]
-時間不等人，但你可以把現有的時間用得更聰明。`,
-  caption:`我身邊很多爸媽說：「等孩子大一點，我就要開始做 ___。」
-
-但孩子大了之後，又有另一個理由等。
-
-時間不等人，但你可以把現有的時間用得更聰明。廁所 3 分鐘也是 3 分鐘。`,
-  cta:['這句話存起來 💡','你在等什麼？留言說說'],
-  format:'純文字 Reel',signal:'Saves + DMs'
-},
-'ai-edu+contrarian':{
-  hook:'停止學 Prompt Engineering。90% 的內容都在浪費你時間',
-  structure:['市面上 PE 課程的問題：教公式而非思維','真正有效的只有 3 個原則','更有效的學習：從你的工作流出發'],
-  script:`[開場 0–8s]
-我看過很多 Prompt Engineering 的課和文章。大多數都在教你記公式。
-
-[核心 8–38s]
-問題是：AI 在進化，公式會過時。三個月前有效的提示，現在可能已經不是最優了。
-真正需要學的，是「怎麼把你的問題說清楚」。
-這不是技術，這是溝通能力。
-你說話說不清楚，AI 給你的答案也會模糊。
-我的方法：給角色、給情境、給輸出格式。這三件事說清楚，80% 的問題就解決了。
-
-[結尾 38–60s]
-不需要背公式，需要的是清晰思考的能力——這才是 AI 時代真正有價值的技能。`,
-  caption:`市面上的 Prompt Engineering 課程，大多在教你記公式。
-
-問題是：AI 在進化，公式會過時。
-
-真正需要學的，是「怎麼把你的問題說清楚」。這不是技術，這是溝通能力。`,
-  cta:['這個觀點你怎麼看？','分享給正在找 AI 課程的朋友'],
-  format:'Reels',signal:'Shares + Comments'
-},
-'ai-edu+story':{
-  hook:'我花了 6 個月才搞懂怎麼用 AI，你不需要走這段彎路',
-  structure:['起點：用 AI 但什麼都問不到重點','卡關：結果一直跟預期差很遠','突破：問題不在 AI，在我的問法','現在：這個框架讓 AI 變成真正有用的協作者'],
-  script:`[開場 0–10s]
-剛開始用 ChatGPT 的時候，我以為它很笨。問什麼答案都很廢。
-
-[展開 10–38s]
-後來我才發現，它不笨，是我問題問得爛。
-我試了一個實驗：同樣問 AI「幫我寫一封 Email」，用三種不同的問法。
-第一種：「幫我寫一封 Email」——廢話，AI 給我廢文。
-第二種：給了收件人背景、我要達成的目的——好很多，但還需要改。
-第三種：給角色、給情境、給輸出格式、給範例——直接可以用。
-
-[結尾 38–60s]
-差距只在問法的清晰度，不在 AI 的能力。學會怎麼問，比學會哪個工具更重要。`,
-  caption:`剛開始用 ChatGPT 的時候，我以為它很笨。問什麼答案都很廢。
-
-後來我才發現，它不笨，是我問題問得爛。
-
-學會怎麼問，比學會哪個工具更重要。`,
-  cta:['有同感的舉手 ✋','分享給也在卡關的朋友'],
-  format:'Reels',signal:'Shares + DMs'
-},
-'anti-guru+contrarian':{
-  hook:'你關注的 AI 大師，90% 的建議根本沒有可行性',
-  structure:['常見大師模式：成功學包裝 + 無具體路徑','辨別好建議的 3 個問題','為什麼「廁所工程師」比大師更可信'],
-  script:`[開場 0–8s]
-我不是大師。我是一個在廁所錄影片的工程師爸爸。
-
-[核心 8–38s]
-所以我說的東西，是我真的試過、真的失敗過、真的有效的。
-判斷一個建議有沒有料，我問三個問題：
-一、他有具體步驟嗎，還是只有口號？
-二、他有提到失敗和限制嗎？只說成功的要小心。
-三、跟著做，你真的有結果嗎？
-真正有料的人，不害怕說「這個方法有時候不管用」。
-因為他是真的在做，遇到過各種狀況。
-
-[結尾 38–60s]
-不是叫你懷疑每個人，是給你一個過濾器，讓你花在學習上的時間更有價值。`,
-  caption:`我不是大師。我是一個每天用 AI 工具解決真實問題的工程師爸爸。
-
-所以我說的東西，是我真的試過、真的失敗過、真的有效的。不是為了漲粉，是因為我希望有人比我少走一段彎路。`,
-  cta:['你也看膩 AI 大師了嗎？','分享給被大師收割過的朋友 😂'],
-  format:'Reels',signal:'Shares + Comments'
-},
-'anti-guru+story':{
-  hook:'我被一個「AI 致富」課程騙了，這就是我現在不賣課的原因',
-  structure:['那堂課的承諾：30 天 AI 副業月入 10 萬','實際內容：全是可以 Google 到的免費資訊','教訓：信真實案例，不信承諾結果'],
-  script:`[開場 0–10s]
-我交過學費。不是便宜的那種。
-
-[故事 10–38s]
-那堂課的標題是：30 天 AI 副業，月收入翻倍。
-我心動了，我付了。
-結果呢？裡面九成的內容，我 Google 15 分鐘就能找到，而且還更詳細。
-我沉默了很久才能接受這件事：
-那個老師賺錢的方式，不是靠 AI，是靠賣「如何用 AI 賺錢」的課程。
-
-[轉折 38–52s]
-那堂課教我最大的東西不是 AI，而是：永遠先問「這個人自己有沒有在做這件事」。
-如果他賣的是「怎麼賺錢」，但他的收入是賣課，那就很值得懷疑了。
-
-[結尾 52–60s]
-我分享的東西，都是我現在實際在做的。你可以來這裡驗證。`,
-  caption:`我交過學費。不是便宜的那種。
-
-那堂課教我最大的東西不是 AI，而是：永遠先問「這個人自己有沒有在做這件事」。
-
-如果他賣的是「怎麼賺錢」，但他的收入是賣課——那就很值得懷疑了。`,
-  cta:['有沒有被坑過的？留言聊 😅','分享給正在考慮買 AI 課的朋友'],
-  format:'Reels',signal:'Shares + Comments'
-},
-};
-
-function getC(key){
-  if(CM[key]) return CM[key];
-  const[tid,sid]=key.split('+');
-  const t=THEMES.find(x=>x.id===tid)||THEMES[0];
-  const s=STYLES.find(x=>x.id===sid)||STYLES[0];
-  const tmplKey=sopTemplateForStyle(sid);
-  // Generate script using SOP structure based on style template
-  let hook,structure,script,caption,cta,signal;
-  if(tmplKey==='edu'){
-    hook=`${t.name}：你最需要知道的 3 件事`;
-    structure=['步驟一：釐清目標（你想解決什麼問題）','步驟二：核心方法（一個可立即執行的做法）','步驟三：確認結果（怎麼知道你做對了）'];
-    script=`[開場 0–8s]\n想用「${t.name}」？大多數人從第二步開始做，所以一直卡關。\n\n[問題 8–25s]\n問題是：沒有先搞清楚「你要解決什麼」，就算工具再強，結果還是亂的。\n\n[解法 25–50s]\n我的做法是三步——\n第一：先問自己今天最痛的一個問題是什麼。\n第二：針對這個問題，找最簡單的一個做法。\n第三：做完，確認有沒有解到那個痛點。\n\n[CTA 50–60s]\n這個步驟存起來，下次用「${t.name}」就從這裡開始。`;
-    caption=`用「${t.name}」，你從第幾步開始做？\n\n大多數人從第二步下手，所以一直卡。先釐清你要解決什麼，再找工具。這三步，我每次都用。`;
-    cta=['存起來 🔖','你現在卡在哪一步？'];
-    signal='Saves + Comments';
-  } else if(tmplKey==='fix'){
-    hook=`關於「${t.name}」，大部分人都做錯這一步`;
-    structure=['常見錯誤：忽略最關鍵的一個環節','錯誤代價：時間/效果的損耗','正確做法：一個立即可改的方法'];
-    script=`[開場 0–8s]\n大部分人在做「${t.name}」時都錯在同一個地方。\n\n[問題 8–30s]\n他們會直接跳進去做，沒有先確認方向對不對。\n這會導致：花了很多時間，但結果和預期差很遠。\n\n[解法 30–50s]\n你只要在開始前問自己一個問題：「這樣做，三個月後我會在哪？」\n答得出來，就繼續。答不出來，先停下來想清楚。\n\n[CTA 50–60s]\n這個思路存起來，下次開始前先問一遍。`;
-    caption=`做「${t.name}」，大部分人的問題不是不努力，是方向沒想清楚就衝了。\n\n三個月後你要在哪？這個問題，現在就問自己一遍。`;
-    cta=['有同感的按讚 👍','你遇過這個問題嗎？'];
-    signal='Shares + Comments';
-  } else {
-    hook=`你是不是也遇過「${t.name}」讓你卡住的那個問題？`;
-    structure=['痛點：大多數人遇到的真實困境','真正原因：不是你不夠努力，是方法對了嗎','改法：一個今天就能試的做法'];
-    script=`[開場 0–8s]\n你是不是也遇過：花了很多時間在「${t.name}」，但一直感覺沒什麼進展？\n\n[問題 8–30s]\n很多人以為是自己不夠努力。\n但真正問題是：我們在用忙碌感代替真正的進度。\n\n[解法 30–50s]\n最簡單的改法是：每天結束前，問自己一個問題——\n「今天這件事，讓我明天更容易還是更難？」\n答案會告訴你要不要繼續這樣做。\n\n[CTA 50–60s]\n這個問題，今晚問一次，存起來。`;
-    caption=`在「${t.name}」這件事上，你有沒有過：很忙，但感覺沒有進展？\n\n不是不夠努力，是忙碌感在騙你。今晚問自己：這件事讓我明天更容易還是更難？`;
-    cta=['這句話存起來 💡','留言說說你的狀況'];
-    signal='Saves + DMs';
-  }
-  return{hook,structure,script,caption,cta,format:'Reels',signal};
-}
-
-// ─── SEED RANDOM ───
-function seededRand(seed){let s=seed;return()=>{s=(s*1664525+1013904223)&0xffffffff;return(s>>>0)/0xffffffff;};}
-function todaySeed(){const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()+regenCount*9999;}
-function pickTopics(){
-  const rand=seededRand(todaySeed());
-  const keys=Object.keys(CM).sort(()=>rand()-.5);
-  const used={t:new Set(),s:new Set()},picked=[];
-  for(const k of keys){
-    const[t,s]=k.split('+');
-    if(!used.t.has(t)&&!used.s.has(s)){picked.push(k);used.t.add(t);used.s.add(s);if(picked.length===3)break;}
-  }
-  while(picked.length<3){const k=keys[picked.length];if(!picked.includes(k))picked.push(k);}
-  return picked.slice(0,3);
-}
-
-// ─── SOP FRAMEWORK ───
-// 7-step script editing SOP for spoken IG content
-const SOP={
-  templates:{
-    pain:`「你是不是也遇過 ___。
-很多人以為原因是 ___，
-但真正問題其實是 ___。
-最簡單的改法是 ___。」`,
-    fix:`「大部分人做 ___ 都錯在 ___。
-這會導致 ___。
-你只要改成 ___，效果就會明顯不同。」`,
-    edu:`「如果你想要 ___，先做這三步：
-第一 ___。
-第二 ___。
-第三 ___。」`
-  },
-  // Map content style to SOP template
-  styleTemplate:{
-    action:'edu', list:'edu', data:'edu',
-    story:'pain', motivation:'pain',
-    contrarian:'fix','anti-guru':'fix'
-  },
-  steps:[
-    {n:1,title:'定唯一目標',tip:'用一句話寫出這支影片只講一件事'},
-    {n:2,title:'分 4 段結構',tip:'開頭 hook → 問題情境 → 核心解法 → 單一 CTA'},
-    {n:3,title:'開頭直接給結果',tip:'刪掉自介與背景，前 3 秒說出痛點或結果'},
-    {n:4,title:'長句改短口語',tip:'每句一個意思，適合直接唸出來，沒有書面語'},
-    {n:5,title:'中段用「問題→原因→解法」',tip:'問題（觀眾現象）→ 原因（為什麼）→ 解法（可執行）'},
-    {n:6,title:'加入節奏變化',tip:'反問、轉折詞、重點重讀，每隔幾句有一次停頓'},
-    {n:7,title:'結尾只做一件事',tip:'只留一個 CTA，不同時塞感謝、總結、延伸'}
-  ],
-  checklist:{
-    structure:['只講一個主題','前 3 秒直接給痛點/衝突/結果','中段有清楚問題與解法','結尾只有一個 CTA'],
-    language:['每句夠短，適合唸出來','沒有書面語或學術腔','重要詞有自然停頓'],
-    attention:['開頭沒有自介或背景鋪陳','中段沒有大量陳述','每隔幾句有節奏變化']
-  }
-};
-
-function sopTemplateForStyle(sid){
-  return SOP.styleTemplate[sid]||'pain';
-}
-
-function renderSOPCard(c, sid){
-  const tmplKey=sopTemplateForStyle(sid);
-  const tmplName={pain:'痛點型',fix:'錯誤修正型',edu:'教學型'}[tmplKey];
-  const tmpl=SOP.templates[tmplKey];
-  const steps=SOP.steps.map(s=>`
-    <div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="background:var(--accent);color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;margin-top:2px">${s.n}</div>
-      <div><div style="font-size:.83rem;font-weight:600">${s.title}</div><div style="font-size:.75rem;color:var(--muted);margin-top:2px">${s.tip}</div></div>
-    </div>`).join('');
-  const chk=(items,label)=>items.map(i=>`<div style="font-size:.75rem;padding:3px 0;color:var(--muted)">☐ ${i}</div>`).join('');
-  return`<div class="card" id="sop-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleSOP()">
-      <div class="section-title" style="margin-bottom:0">📋 SOP 腳本框架 <span style="font-size:.7rem;font-weight:400;color:var(--accent)">${tmplName}</span></div>
-      <span id="sop-toggle" style="color:var(--muted);font-size:.8rem">展開 ▾</span>
-    </div>
-    <div id="sop-body" style="display:none;margin-top:12px">
-      <div style="font-size:.78rem;color:var(--muted);margin-bottom:8px">建議套用模板</div>
-      <div class="script-box" style="font-size:.8rem;white-space:pre-wrap;margin-bottom:12px">${tmpl}</div>
-      <div style="font-size:.78rem;color:var(--muted);margin-bottom:6px">7 步驟流程</div>
-      ${steps}
-      <div style="margin-top:12px;background:var(--surface2);border-radius:8px;padding:10px">
-        <div style="font-size:.75rem;color:var(--accent);font-weight:600;margin-bottom:6px">拍攝前檢查</div>
-        <div style="font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px">內容結構</div>
-        ${chk(SOP.checklist.structure)}
-        <div style="font-size:.72rem;color:var(--muted);margin:6px 0 4px;text-transform:uppercase;letter-spacing:.3px">語言表達</div>
-        ${chk(SOP.checklist.language)}
-        <div style="font-size:.72rem;color:var(--muted);margin:6px 0 4px;text-transform:uppercase;letter-spacing:.3px">留存注意力</div>
-        ${chk(SOP.checklist.attention)}
-      </div>
-    </div>
-  </div>`;
-}
-function toggleSOP(){
-  const b=id('sop-body'),t=id('sop-toggle');
-  if(b.style.display==='none'){b.style.display='block';t.textContent='收起 ▴';}
-  else{b.style.display='none';t.textContent='展開 ▾';}
-}
-
 // ─── STYLE ANALYSIS ───
 function analyzeStyle(){
   const texts=Object.values(styleRecords);
@@ -955,15 +379,6 @@ function analyzeStyle(){
     emojiFreq:emojis>8?'大量':emojis>2?'適度':'少用',
     editCount:texts.length
   };
-}
-function styleHint(){
-  const p=analyzeStyle();if(!p)return null;
-  const h=[];
-  if(p.tone==='口語親切')h.push('語氣更口語');
-  if(p.tone==='清單條列')h.push('改為條列格式');
-  if(p.emojiFreq==='大量')h.push('加入更多 Emoji');
-  if(p.emojiFreq==='少用')h.push('Emoji 減少');
-  return h.length?'✨ 根據你的習慣：'+h.join('、'):null;
 }
 
 // ─── POSITIONING ENGINE ───
@@ -1157,16 +572,20 @@ async function saveProfile(){
 // ─── PAGE 2: TOPICS ───
 function renderTopics(){
   const el=id('page-topics');
-  const hint=styleHint();
-  const d=new Date(),ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  const d=new Date();
+  const ds=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  if(!aiTopics){
+    const uid=currentUser?.id||'anon';
+    const ck=`igt_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${uid}`;
+    try{const c=localStorage.getItem(ck);if(c)aiTopics=JSON.parse(c);}catch{}
+  }
   if(aiTopics){
     el.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div>
-          <div style="font-size:1.05rem;font-weight:700">✨ AI 生成主題</div>
+          <div style="font-size:1.05rem;font-weight:700">✨ 今日 AI 主題</div>
           <div style="font-size:.78rem;color:var(--muted)">${ds} · 根據你的定位客製化</div>
         </div>
-        <button class="btn btn-ghost btn-sm" style="font-size:.72rem" onclick="aiTopics=null;renderTopics()">精選主題</button>
       </div>
       ${aiTopics.map((t,i)=>`
         <div class="topic-card" onclick="openAIDetail(${i})">
@@ -1174,6 +593,7 @@ function renderTopics(){
             <span class="tag tag-a">✨ ${t.theme}</span>
             <span class="tag tag-o">${t.style}</span>
             <span class="tag" style="color:var(--muted)">${t.format}</span>
+            ${styleRecords['ai_'+i]?'<span class="tag tag-g">已修改 ✓</span>':''}
           </div>
           <div class="topic-hook">${t.hook}</div>
           <div style="font-size:.72rem;color:var(--muted);margin-top:6px">💡 ${t.why}</div>
@@ -1181,32 +601,13 @@ function renderTopics(){
       <button class="regen-btn" onclick="genAITopics()">✨ 重新 AI 生成</button>`;
     return;
   }
-  const keys=pickTopics();
   el.innerHTML=`
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div><div style="font-size:1.05rem;font-weight:700">今日主題</div><div style="font-size:.78rem;color:var(--muted)">${ds}</div></div>
-      ${hint?`<div style="font-size:.72rem;color:var(--green);max-width:160px;text-align:right">${hint}</div>`:''}
-    </div>
-    ${keys.map(k=>{
-      const[tid,sid]=k.split('+');
-      const t=THEMES.find(x=>x.id===tid),s=STYLES.find(x=>x.id===sid),c=getC(k);
-      const saved=styleRecords[k];
-      return`<div class="topic-card" onclick="openDetail('${k}')">
-        <div class="topic-meta">
-          <span class="tag tag-a">${t.emoji} ${t.name}</span>
-          <span class="tag tag-o">${s.tag}</span>
-          <span class="tag" style="color:var(--muted)">${c.format}</span>
-          ${saved?'<span class="tag tag-g">已修改 ✓</span>':''}
-        </div>
-        <div class="topic-hook">${c.hook}</div>
-      </div>`;
-    }).join('')}
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <button class="regen-btn" style="flex:1" onclick="regenT()">↻ 重新抽取</button>
-      <button class="regen-btn" style="flex:1;background:linear-gradient(135deg,#6e40c9,#2563eb);color:#fff;border:none" onclick="genAITopics()">✨ AI 生成</button>
+    <div style="display:flex;justify-content:center;align-items:center;height:200px;flex-direction:column;gap:12px">
+      <div style="font-size:1.5rem">✨</div>
+      <div style="color:var(--muted);font-size:.88rem">正在為你生成今日主題…</div>
     </div>`;
+  genAITopics();
 }
-function regenT(){regenCount++;renderTopics();}
 
 async function genAITopics(){
   const el=id('page-topics');
@@ -1230,6 +631,9 @@ async function genAITopics(){
     if(error) throw new Error(error.message);
     if(!data?.topics?.length) throw new Error('無效回應');
     aiTopics=data.topics;
+    const d=new Date(),uid=currentUser?.id||'anon';
+    const ck=`igt_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${uid}`;
+    try{localStorage.setItem(ck,JSON.stringify(aiTopics));}catch{}
     renderTopics();
     toast('AI 已生成 3 個客製化主題 ✨');
   }catch(e){
@@ -1238,66 +642,56 @@ async function genAITopics(){
   }
 }
 
-function openAIDetail(idx){
+async function openAIDetail(idx){
   const t=aiTopics[idx];
-  const styleMap={'方法型':'edu','名單型':'edu','數據型':'edu','故事型':'pain','動機型':'pain','反骨型':'fix','對比型':'fix'};
-  const tmplKey=styleMap[t.style]||'edu';
-  const tmpl=SOP.templates[tmplKey];
-  id('detail-body').innerHTML=`
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-      <span class="tag tag-a">✨ ${t.theme}</span>
-      <span class="tag tag-o">${t.style}</span>
-      <span class="tag" style="color:var(--muted)">${t.format}</span>
-    </div>
-    <div class="card"><div class="section-title">🎯 AI 生成 Hook</div><div class="hook-box">${t.hook}</div></div>
-    <div class="card"><div class="section-title">💡 為何有潛力</div><div style="font-size:.88rem;line-height:1.7;color:var(--text)">${t.why}</div></div>
-    <div class="card">
-      <div class="section-title">📐 SOP 腳本模板（依你風格填空）</div>
-      <div class="script-box">${tmpl}</div>
-    </div>
-    <div class="card">
-      <div style="font-size:.83rem;color:var(--muted);margin-bottom:8px">✏️ 依模板寫你的版本</div>
-      <textarea class="ea" id="edit-area" placeholder="把上方模板的___填入你自己的內容…"></textarea>
+  currentTopicKey='ai_'+idx;
+  const saved=styleRecords[currentTopicKey]||'';
+  const tagRow=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+    <span class="tag tag-a">✨ ${t.theme}</span>
+    <span class="tag tag-o">${t.style}</span>
+    <span class="tag" style="color:var(--muted)">${t.format}</span>
+  </div>`;
+  id('detail-body').innerHTML=`${tagRow}
+    <div class="card"><div class="section-title">🎯 Hook（開場勾子）</div><div class="hook-box">${t.hook}</div></div>
+    <div style="display:flex;justify-content:center;align-items:center;padding:40px 0;flex-direction:column;gap:10px">
+      <div style="font-size:1.6rem">✨</div>
+      <div style="color:var(--muted);font-size:.85rem">AI 正在生成完整逐字腳本…</div>
     </div>`;
   id('detail-overlay').classList.add('open');
   id('detail-overlay').scrollTop=0;
+  const p=userProfile||{};
+  try{
+    const{data,error}=await sb.functions.invoke('generate-script',{
+      body:{hook:t.hook,theme:t.theme,style:t.style,format:t.format,
+            niche:p.niche||'',target_audience:p.target_audience||''}
+    });
+    if(error) throw new Error(error.message);
+    const c=data;
+    const scriptHtml=(c.script||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+    const captionHtml=(c.caption||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+    id('detail-body').innerHTML=`${tagRow}
+      <div class="card"><div class="section-title">🎯 Hook（開場勾子）</div><div class="hook-box">${t.hook}</div></div>
+      <div class="card">
+        <div class="section-title">🎙️ 逐字腳本</div>
+        <div class="timing">⏱ 約 60 秒 · 建議語速 150 字／分 · 結構：開頭→問題→解法→CTA</div>
+        <div class="script-box" style="white-space:normal;line-height:1.8">${scriptHtml}</div>
+      </div>
+      ${c.structure?.length?`<div class="card"><div class="section-title">📐 內容結構</div><ol class="structure">${c.structure.map(x=>`<li>${x}</li>`).join('')}</ol></div>`:''}
+      ${captionHtml?`<div class="card"><div class="section-title">📝 Caption 草稿</div><div class="caption-box">${captionHtml}</div></div>`:''}
+      ${c.cta?.length?`<div class="card"><div class="section-title">📢 CTA 選項（只選一個）</div><div class="cta-row">${c.cta.map(x=>`<div class="cta-pill">${x}</div>`).join('')}</div>${c.signal?`<div style="margin-top:10px"><span class="tag tag-g">演算法目標：${c.signal}</span></div>`:''}</div>`:''}
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:.83rem;color:var(--muted)">✏️ 改寫成你的語氣 → 系統學習你的風格</span>
+          <span class="save-ok" id="save-ok">已儲存 ✓</span>
+        </div>
+        <textarea class="ea" id="edit-area" placeholder="依上方腳本改寫成你的語氣：&#10;• 換成你的真實情境&#10;• 保留結構，改換自己的話">${saved}</textarea>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveEdit()">儲存修改</button>
+      </div>`;
+  }catch(e){
+    id('detail-body').innerHTML+=`<div class="card"><div style="color:#ef4444;font-size:.85rem">腳本生成失敗：${e.message}</div><button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openAIDetail(${idx})">重試</button></div>`;
+  }
 }
 
-// ─── DETAIL ───
-function openDetail(key){
-  currentTopicKey=key;
-  const[tid,sid]=key.split('+');
-  const t=THEMES.find(x=>x.id===tid),s=STYLES.find(x=>x.id===sid),c=getC(key);
-  const saved=styleRecords[key]||'';
-  id('detail-body').innerHTML=`
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-      <span class="tag tag-a">${t.emoji} ${t.name}</span><span class="tag tag-o">${s.tag}</span>
-    </div>
-    <div class="card"><div class="section-title">🎯 Hook（開場勾子）</div><div class="hook-box">${c.hook}</div></div>
-    <div class="card">
-      <div class="section-title">🎙️ 一分鐘口播腳本</div>
-      <div class="timing">⏱ 約 60 秒 · 建議語速 150 字／分 · 結構：開頭→問題→解法→CTA</div>
-      <div class="script-box">${c.script}</div>
-    </div>
-    <div class="card"><div class="section-title">📐 內容結構（SOP 步驟 2）</div><ol class="structure">${c.structure.map(x=>`<li>${x}</li>`).join('')}</ol></div>
-    ${renderSOPCard(c, sid)}
-    <div class="card"><div class="section-title">📝 Caption 草稿</div><div class="caption-box">${c.caption}</div></div>
-    <div class="card">
-      <div class="section-title">📢 CTA 選項（只選一個）</div>
-      <div class="cta-row">${c.cta.map(x=>`<div class="cta-pill">${x}</div>`).join('')}</div>
-      <div style="margin-top:10px"><span class="tag tag-g">演算法目標：${c.signal}</span></div>
-    </div>
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:.83rem;color:var(--muted)">✏️ 依 SOP 改寫 → 系統學習你的語氣</span>
-        <span class="save-ok" id="save-ok">已儲存 ✓</span>
-      </div>
-      <textarea class="ea" id="edit-area" placeholder="依上方 SOP 框架改寫腳本：&#10;1. 開頭直接給痛點（前 3 秒）&#10;2. 中段：問題→原因→解法&#10;3. 短句口語，有節奏停頓&#10;4. 結尾只留一個 CTA">${saved}</textarea>
-      <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveEdit()">儲存修改</button>
-    </div>`;
-  id('detail-overlay').classList.add('open');
-  id('detail-overlay').scrollTop=0;
-}
 function closeDetail(){id('detail-overlay').classList.remove('open');renderTopics();}
 async function saveEdit(){
   const text=id('edit-area').value.trim();
