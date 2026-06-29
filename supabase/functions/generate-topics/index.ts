@@ -5,6 +5,14 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
 const SYSTEM_PROMPT = `你是 2026 年的 IG 內容策略師，專精演算法與 Justin Welsh 內容矩陣。
 根據用戶的個人品牌定位，生成 3 個高潛力的今日 IG 內容主題。
 
+產生 Hook 的核心方法（九宮格交叉法）：
+用戶會提供兩個九宮格——
+- 九宮格 1「身份最常接觸事物」：用戶身份日常接觸的人、事、物、場景。
+- 九宮格 2「受眾的煩惱問題」：受眾真正在意的痛點。
+把「九宮格 1 的某個接觸事物」× 「九宮格 2 的某個煩惱」交叉組合，產出具體、貼近生活的 Hook。
+範例：接觸「上班族朋友」＋ 煩惱「工作太浪費時間」→ Hook：「3 個省下工作時間的 AI 組合技」。
+若用戶有提供九宮格內容，務必讓 3 個 hook 取材自不同的交叉組合。
+
 每個主題必須符合：
 - hook：吸引人停滑的開場句，15 字以內，繁體中文，不用標點結尾
 - theme：主題標籤，2-4 字，繁體中文
@@ -35,6 +43,17 @@ Deno.serve(async (req: Request) => {
   const body = await req.json().catch(() => ({}));
   const { niche, target_audience, identity_label, solve_problem, deliver_result, use_method } =
     body as Record<string, string>;
+  const identityGrid = Array.isArray((body as Record<string, unknown>).identity_grid)
+    ? ((body as Record<string, unknown>).identity_grid as string[]).filter(Boolean)
+    : [];
+  const audienceGrid = Array.isArray((body as Record<string, unknown>).audience_grid)
+    ? ((body as Record<string, unknown>).audience_grid as string[]).filter(Boolean)
+    : [];
+
+  const gridContext =
+    (identityGrid.length || audienceGrid.length)
+      ? `\n\n九宮格 1（身份最常接觸事物）：${identityGrid.length ? identityGrid.join('、') : '未填寫'}\n九宮格 2（受眾的煩惱問題）：${audienceGrid.length ? audienceGrid.join('、') : '未填寫'}\n請用「九宮格交叉法」產生 3 個 hook，每個取材自不同的「接觸事物 × 煩惱」組合。`
+      : '';
 
   const userContext = `用戶品牌定位：
 核心賽道：${niche || '通用內容'}
@@ -42,7 +61,7 @@ Deno.serve(async (req: Request) => {
 身分標籤：${identity_label || '未設定'}
 解決問題：${solve_problem || '未設定'}
 交付成果：${deliver_result || '未設定'}
-使用方法：${use_method || '未設定'}
+使用方法：${use_method || '未設定'}${gridContext}
 
 生成 3 個今日最適合此定位的 IG 主題，三個要有差異性（不同風格和格式）。`;
 
