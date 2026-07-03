@@ -84,33 +84,6 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .score-src-badge{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .score-src-badge span{background:#2a2a3e;border-radius:20px;padding:2px 10px;font-size:.72rem;color:var(--muted)}
 
-/* ── FB Sync ── */
-.fb-card{border:1px solid #3a3560;border-radius:var(--radius);padding:18px;margin-bottom:14px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)}
-.fb-card h3{font-size:.95rem;font-weight:700;margin-bottom:4px;color:#a78bfa}
-.fb-card .sub{font-size:.8rem;color:var(--muted);margin-bottom:14px}
-.fb-steps{counter-reset:step;margin-bottom:14px}
-.fb-steps li{counter-increment:step;font-size:.82rem;color:var(--text);margin-bottom:6px;padding-left:28px;position:relative;list-style:none;line-height:1.5}
-.fb-steps li::before{content:counter(step);position:absolute;left:0;top:0;width:20px;height:20px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff}
-.fb-steps li a{color:var(--accent);text-decoration:underline}
-.fb-steps li code{background:#2a2a3e;padding:1px 6px;border-radius:4px;font-size:.78rem;font-family:monospace;color:var(--accent2)}
-.fb-connected{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.fb-badge{background:#2a2a3e;border-radius:20px;padding:4px 12px;font-size:.82rem;color:var(--green);font-weight:600;border:1px solid var(--green)}
-.fb-actions{display:flex;gap:8px;flex-wrap:wrap}
-.sync-preview{margin-top:14px}
-.sync-preview h4{font-size:.85rem;font-weight:700;margin-bottom:8px;color:var(--muted)}
-.sync-item{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.sync-item-check{flex-shrink:0}
-.sync-item-meta{flex:1;min-width:120px}
-.sync-item-meta .date{font-size:.8rem;color:var(--muted)}
-.sync-item-meta .type{font-size:.78rem;background:#2a2a3e;border-radius:12px;padding:1px 8px;display:inline-block;margin-top:2px}
-.sync-item-nums{display:flex;gap:10px;flex-wrap:wrap}
-.sync-item-nums .mn{text-align:center}
-.sync-item-nums .mv{font-size:.88rem;font-weight:700}
-.sync-item-nums .mk{font-size:.7rem;color:var(--muted)}
-.sync-save-bar{margin-top:10px;display:flex;gap:8px;align-items:center}
-.fb-token-input{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
-.fb-token-input input{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-size:.88rem;font-family:inherit}
-.fb-token-input input:focus{outline:none;border-color:var(--accent)}
 .info-box{background:var(--surface2);border-radius:10px;padding:12px}
 .info-box .lb{font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
 .info-box .vl{font-size:.9rem;line-height:1.5}
@@ -135,6 +108,17 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .topic-hook{font-size:1rem;font-weight:600;line-height:1.5}
 .regen-btn{width:100%;padding:11px;background:transparent;border:1px dashed var(--border);border-radius:10px;color:var(--muted);cursor:pointer;font-size:.85rem;transition:all .15s;margin-top:4px}
 .regen-btn:hover{border-color:var(--accent);color:var(--accent)}
+.hist-head{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}
+.hist-head .section-title{margin:0}
+.hist-clear{background:none;border:none;color:var(--muted);font-size:.74rem;cursor:pointer;padding:2px 4px}
+.hist-clear:hover{color:#ef4444}
+.hist-item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;cursor:pointer;transition:border-color .15s;margin-bottom:8px}
+.hist-item:hover{border-color:var(--accent)}
+.hist-item .hi-main{flex:1;min-width:0}
+.hist-item .hi-hook{font-size:.88rem;font-weight:600;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-item .hi-meta{font-size:.7rem;color:var(--muted);margin-top:3px}
+.hist-item .hi-date{font-size:.7rem;color:var(--muted);flex-shrink:0}
+.hist-empty{color:var(--muted);font-size:.8rem;text-align:center;padding:16px 0}
 
 /* ── Detail overlay ── */
 #detail-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:20;overflow-y:auto;padding:20px 16px 80px}
@@ -178,6 +162,25 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
 .pm .v{font-weight:700;font-size:.95rem}.pm .k{font-size:.68rem;color:var(--muted);text-align:center}
 .empty{text-align:center;color:var(--muted);padding:32px 16px;font-size:.88rem}
 
+/* ── 流量預測（vp）── */
+.pts-chip{margin-left:auto;margin-right:10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:.78rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.blk-badge{display:inline-block;background:var(--surface2);border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:700;margin-bottom:8px}
+.vp-score{display:flex;align-items:center;gap:16px;background:var(--surface2);border-radius:12px;padding:14px 16px;margin:12px 0}
+.vp-score .num{font-size:2.2rem;font-weight:800;color:var(--accent)}
+.vp-score .lb2{font-size:.75rem;color:var(--muted)}
+.vp-seg{font-size:.8rem;border-bottom:1px solid var(--border);padding:8px 0;display:flex;gap:8px;align-items:flex-start}
+.vp-seg:last-child{border-bottom:none}
+.vp-verdict{flex-shrink:0;border-radius:6px;padding:1px 8px;font-size:.7rem;font-weight:700}
+.vd-keep{background:rgba(74,222,128,.15);color:var(--green)}
+.vd-fix{background:rgba(246,201,14,.15);color:#f6c90e}
+.vd-redo{background:rgba(239,68,68,.15);color:#ef4444}
+.vp-sug{background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 12px;margin-bottom:8px;font-size:.84rem;line-height:1.6}
+.vp-file{display:block;width:100%;font-size:.8rem;color:var(--muted);margin:6px 0}
+.adm-row{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);padding:9px 0;font-size:.82rem;flex-wrap:wrap}
+.adm-row:last-child{border-bottom:none}
+.adm-row .em{flex:1;min-width:140px;overflow:hidden;text-overflow:ellipsis}
+.adm-row input[type=number]{width:70px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:5px 8px;font-size:.82rem}
+
 /* ── Toast ── */
 #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:8px;font-size:.85rem;opacity:0;transition:opacity .3s;pointer-events:none;z-index:100;white-space:nowrap}
 #toast.show{opacity:1}
@@ -214,24 +217,33 @@ textarea.ea:focus{outline:none;border-color:var(--accent)}
   <div class="topbar">
     <div class="logo">IG Agent</div>
     <span class="handle" id="top-handle"></span>
+    <span class="pts-chip" id="pts-chip" title="剩餘點數（每次 AI 計算 10 點）">⚡ –</span>
     <button class="signout" onclick="doSignOut()">登出</button>
   </div>
   <div class="page-wrap" id="page-profile" style="display:none"></div>
   <div class="page-wrap" id="page-topics"  style="display:none"></div>
+  <div class="page-wrap" id="page-vp"      style="display:none"></div>
   <div class="page-wrap" id="page-advice"  style="display:none"></div>
   <div class="page-wrap" id="page-score"   style="display:none"></div>
+  <div class="page-wrap" id="page-admin"   style="display:none"></div>
   <nav class="bottom-nav">
     <div class="nav-item" id="nav-profile" onclick="showPage('profile')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>定位
     </div>
     <div class="nav-item" id="nav-topics" onclick="showPage('topics')">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>每日主題
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>生成器
+    </div>
+    <div class="nav-item" id="nav-vp" onclick="showPage('vp')">
+      <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-6 4 3 5-8"/></svg>流量預測
     </div>
     <div class="nav-item" id="nav-advice" onclick="showPage('advice')">
       <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>流量建議
     </div>
     <div class="nav-item" id="nav-score" onclick="showPage('score')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>評分
+    </div>
+    <div class="nav-item" id="nav-admin" onclick="showPage('admin')" style="display:none">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>後臺
     </div>
   </nav>
 </div>
@@ -254,22 +266,6 @@ const id=x=>document.getElementById(x);
 const v=x=>id(x)?.value.trim()||'';
 const n=x=>parseInt(id(x)?.value)||0;
 
-// ─── CAPTURE FB OAUTH TOKEN BEFORE SUPABASE INIT ───
-// Must run before supabase.createClient() so Supabase doesn't misread
-// Facebook's access_token from the hash as a Supabase session.
-(function(){
-  try{
-    const p=new URLSearchParams(location.hash.replace('#',''));
-    const st=sessionStorage.getItem('fb_oauth_state');
-    // Facebook hash: has access_token + matching state, but NO "type" param (Supabase-specific)
-    if(st&&p.get('state')===st&&p.has('access_token')&&!p.has('type')){
-      sessionStorage.removeItem('fb_oauth_state');
-      sessionStorage.setItem('fb_pending_token',p.get('access_token'));
-      history.replaceState({},'',location.pathname+location.search);
-    }
-  }catch(e){}
-})();
-
 // ─── SUPABASE ───
 const sb = supabase.createClient(
   'https://hhcubvixldieuwdeqnwc.supabase.co',
@@ -277,21 +273,12 @@ const sb = supabase.createClient(
   { auth: { flowType: 'implicit' } }
 );
 
-let currentUser=null, userProfile=null, styleRecords={}, perfData=[], currentTopicKey=null, aiTopics=null;
-
-// ─── FB INTEGRATION STATE ───
-const FB_APP_ID = '1497940802111247';
-// Facebook Login for Business configuration ID (required for Business-type apps).
-// Create at: App Dashboard → Facebook Login for Business → Configurations
-const FB_CONFIG_ID = '';
-function fbState(){
-  return{
-    appId:   FB_APP_ID,
-    token:   localStorage.getItem('ig_fb_page_token')||'',
-    uid:     localStorage.getItem('ig_fb_ig_uid')||'',
-    name:    localStorage.getItem('ig_fb_ig_name')||'',
-  };
-}
+let currentUser=null, userProfile=null, styleRecords={}, perfData=[], currentTopicKey=null, aiTopics=null, selectedTopics=[];
+// ── 流量預測（vp）狀態 ──
+const AI_COST=10;
+let vpAccount=null, vpBaseModel=null, vpUserModel=null, vpPosts=[], vpDraft=null, _lastScript=null, _vp4=null;
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const fileToB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});
 
 // ─── AUTH ───
 async function doGoogleLogin(){
@@ -332,17 +319,11 @@ async function showApp(user){
 }
 
 // Auth state listener
-// INITIAL_SESSION: fires on every page load (handles persisted sessions + FB OAuth return)
+// INITIAL_SESSION: fires on every page load (handles persisted sessions)
 // SIGNED_IN: fires after Google OAuth redirect
 sb.auth.onAuthStateChange(async(event,session)=>{
   if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session?.user&&!currentUser){
     await showApp(session.user);
-    // Process pending FB OAuth token (captured from hash before Supabase init)
-    const fbPending=sessionStorage.getItem('fb_pending_token');
-    if(fbPending){
-      sessionStorage.removeItem('fb_pending_token');
-      fbGetIGAccount(fbPending);
-    }
   } else if(event==='INITIAL_SESSION'&&!session?.user){
     id('loading-screen').style.display='none';
     id('auth-screen').style.display='flex';
@@ -354,27 +335,62 @@ sb.auth.onAuthStateChange(async(event,session)=>{
 
 async function loadData(){
   const uid=currentUser.id;
-  const[{data:prof},{data:sty},{data:perf}]=await Promise.all([
+  const[{data:prof},{data:sty},{data:perf},{data:sel},{data:acct},{data:base},{data:um},{data:posts}]=await Promise.all([
     sb.from('ig_profiles').select('*').eq('user_id',uid).single(),
     sb.from('ig_style_records').select('*').eq('user_id',uid),
-    sb.from('ig_performance').select('*').eq('user_id',uid).order('post_date',{ascending:false}).limit(30)
+    sb.from('ig_performance').select('*').eq('user_id',uid).order('post_date',{ascending:false}).limit(30),
+    sb.from('ig_selected_topics').select('*').eq('user_id',uid).order('selected_at',{ascending:false}).limit(30),
+    sb.from('vp_accounts').select('*').eq('user_id',uid).maybeSingle(),
+    sb.from('vp_base_model').select('*').eq('id',1).maybeSingle(),
+    sb.from('vp_user_models').select('*').eq('user_id',uid).maybeSingle(),
+    sb.from('vp_posts').select('*').eq('user_id',uid).order('created_at',{ascending:false}).limit(30)
   ]);
   userProfile=prof;
   styleRecords={};(sty||[]).forEach(r=>{styleRecords[r.topic_key]=r.edited_text;});
   perfData=perf||[];
+  selectedTopics=sel||[];
+  vpBaseModel=base?.model||null;
+  vpUserModel=um?.model||{bias:0,samples:0,notes:[]};
+  vpPosts=posts||[];
+  vpAccount=acct;
+  if(!vpAccount){
+    // 首次使用：建立帳號（基礎 60 點）
+    const{data:na}=await sb.from('vp_accounts').insert({user_id:uid,email:currentUser.email}).select().single();
+    vpAccount=na||{points:60,is_admin:false};
+  }
+  updatePtsChip();
+  if(vpAccount?.is_admin) id('nav-admin').style.display='';
   if(prof?.ig_handle) id('top-handle').textContent='@'+prof.ig_handle;
+}
+
+// ── 點數 ──
+function updatePtsChip(){ id('pts-chip').textContent='⚡ '+(vpAccount?.points??'–'); }
+async function spendPoints(cost=AI_COST){
+  try{
+    const{data,error}=await sb.rpc('vp_spend_points',{cost});
+    if(error) throw error;
+    if(vpAccount) vpAccount.points=data;
+    updatePtsChip();
+    return true;
+  }catch(e){
+    const short=(e.message||'').includes('INSUFFICIENT_POINTS');
+    toast(short?`點數不足（每次 AI 計算 ${AI_COST} 點），請聯絡管理員加點`:'點數扣抵失敗：'+e.message,true);
+    return false;
+  }
 }
 
 // ─── NAV ───
 function showPage(name){
-  ['profile','topics','advice','score'].forEach(p=>{
+  ['profile','topics','vp','advice','score','admin'].forEach(p=>{
     id('page-'+p).style.display=p===name?'block':'none';
     id('nav-'+p).classList.toggle('active',p===name);
   });
   if(name==='profile') renderProfile();
   if(name==='topics')  renderTopics();
+  if(name==='vp')      renderVp();
   if(name==='advice')  renderAdvice();
   if(name==='score')   renderScorePage();
+  if(name==='admin')   renderAdmin();
 }
 
 // ─── STYLE ANALYSIS ───
@@ -648,8 +664,9 @@ function renderTopics(){
     el.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div>
+          <div class="blk-badge">區塊 1 · 自動生成標題</div>
           <div style="font-size:1.05rem;font-weight:700">✨ 今日 AI 主題</div>
-          <div style="font-size:.78rem;color:var(--muted)">${ds} · 根據你的定位客製化</div>
+          <div style="font-size:.78rem;color:var(--muted)">${ds} · 根據你的定位客製化 · 點標題進入區塊 2 生成文稿</div>
         </div>
       </div>
       ${aiTopics.map((t,i)=>`
@@ -663,18 +680,72 @@ function renderTopics(){
           <div class="topic-hook">${t.hook}</div>
           <div style="font-size:.72rem;color:var(--muted);margin-top:6px">💡 ${t.why}</div>
         </div>`).join('')}
-      <button class="regen-btn" onclick="genAITopics()">✨ 重新 AI 生成</button>`;
+      <button class="regen-btn" onclick="genAITopics()">✨ 重新 AI 生成（${AI_COST} 點）</button>
+      ${selectedTopicsSection()}`;
     return;
   }
   el.innerHTML=`
-    <div style="display:flex;justify-content:center;align-items:center;height:200px;flex-direction:column;gap:12px">
-      <div style="font-size:1.5rem">✨</div>
-      <div style="color:var(--muted);font-size:.88rem">正在為你生成今日主題…</div>
-    </div>`;
-  genAITopics();
+    <div class="card" style="text-align:center;padding:36px 20px">
+      <div class="blk-badge">區塊 1 · 自動生成標題</div>
+      <div style="font-size:1.5rem;margin:8px 0">✨</div>
+      <div style="color:var(--muted);font-size:.88rem;margin-bottom:16px">根據你的定位與九宮格，AI 生成 3 個今日標題</div>
+      <button class="btn btn-primary" onclick="genAITopics()">✨ 生成今日標題（${AI_COST} 點）</button>
+    </div>
+    ${selectedTopicsSection()}`;
+}
+
+// ── 已選主題紀錄 ──
+function selectedTopicsSection(){
+  const items=selectedTopics.length
+    ? selectedTopics.map((h,i)=>{
+        const d=h.selected_at?new Date(h.selected_at):null;
+        const ds=d?`${d.getMonth()+1}/${d.getDate()}`:'';
+        const meta=[h.theme,h.style,h.format].filter(Boolean).join(' · ');
+        return `<div class="hist-item" onclick="openHistoryTopic(${i})">
+          <div class="hi-main">
+            <div class="hi-hook">${h.hook||'（無標題）'}</div>
+            ${meta?`<div class="hi-meta">${meta}</div>`:''}
+          </div>
+          <div class="hi-date">${ds}</div>
+        </div>`;
+      }).join('')
+    : `<div class="hist-empty">尚無紀錄，點開任一主題後就會出現在這裡</div>`;
+  return `
+    <div class="hist-head">
+      <div class="section-title">📌 已選主題紀錄</div>
+      ${selectedTopics.length?`<button class="hist-clear" onclick="clearSelectedTopics()">清除紀錄</button>`:''}
+    </div>
+    ${items}`;
+}
+
+// Record a topic as "selected" (dedupe by hook, newest first).
+async function recordSelectedTopic(t){
+  if(!t||!t.hook||!currentUser) return;
+  selectedTopics=selectedTopics.filter(x=>x.hook!==t.hook);
+  selectedTopics.unshift({hook:t.hook,theme:t.theme,style:t.style,format:t.format,selected_at:new Date().toISOString()});
+  if(selectedTopics.length>30) selectedTopics=selectedTopics.slice(0,30);
+  try{
+    await sb.from('ig_selected_topics').delete().eq('user_id',currentUser.id).eq('hook',t.hook);
+    await sb.from('ig_selected_topics').insert({user_id:currentUser.id,hook:t.hook,theme:t.theme||null,style:t.style||null,format:t.format||null});
+  }catch{}
+}
+
+function openHistoryTopic(i){
+  const h=selectedTopics[i];
+  if(!h) return;
+  openTopicDetail({hook:h.hook,theme:h.theme,style:h.style,format:h.format},'hist_'+i);
+}
+
+async function clearSelectedTopics(){
+  if(!currentUser) return;
+  if(!confirm('確定要清除全部已選主題紀錄嗎？')) return;
+  selectedTopics=[];
+  try{await sb.from('ig_selected_topics').delete().eq('user_id',currentUser.id);}catch{}
+  renderTopics();
 }
 
 async function genAITopics(){
+  if(!await spendPoints()) return;
   const el=id('page-topics');
   const p=userProfile||{};
   // show loading
@@ -711,13 +782,30 @@ async function genAITopics(){
 
 async function openAIDetail(idx){
   const t=aiTopics[idx];
-  currentTopicKey='ai_'+idx;
+  recordSelectedTopic(t);
+  openTopicDetail(t,'ai_'+idx);
+}
+
+let _lastDetail=null;
+function retryDetail(){ if(_lastDetail) openTopicDetail(_lastDetail.t,_lastDetail.key); }
+
+async function openTopicDetail(t,key){
+  _lastDetail={t,key};
+  currentTopicKey=key;
   const saved=styleRecords[currentTopicKey]||'';
-  const tagRow=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+  const tagRow=`<div class="blk-badge">區塊 2 · 自動生成文稿</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
     <span class="tag tag-a">✨ ${t.theme}</span>
     <span class="tag tag-o">${t.style}</span>
     <span class="tag" style="color:var(--muted)">${t.format}</span>
   </div>`;
+  if(!await spendPoints()){
+    id('detail-body').innerHTML=`${tagRow}
+      <div class="card"><div class="section-title">🎯 Hook（開場勾子）</div><div class="hook-box">${t.hook}</div></div>
+      <div class="card"><div style="color:#ef4444;font-size:.85rem">點數不足，無法生成文稿。</div></div>`;
+    id('detail-overlay').classList.add('open');
+    return;
+  }
   id('detail-body').innerHTML=`${tagRow}
     <div class="card"><div class="section-title">🎯 Hook（開場勾子）</div><div class="hook-box">${t.hook}</div></div>
     <div style="display:flex;justify-content:center;align-items:center;padding:40px 0;flex-direction:column;gap:10px">
@@ -734,6 +822,7 @@ async function openAIDetail(idx){
     });
     if(error) throw new Error(error.message);
     const c=data;
+    _lastScript={title:t.hook,script:c.script||''};
     const scriptHtml=(c.script||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
     const captionHtml=(c.caption||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>');
     id('detail-body').innerHTML=`${tagRow}
@@ -752,10 +841,13 @@ async function openAIDetail(idx){
           <span class="save-ok" id="save-ok">已儲存 ✓</span>
         </div>
         <textarea class="ea" id="edit-area" placeholder="依上方腳本改寫成你的語氣：&#10;• 換成你的真實情境&#10;• 保留結構，改換自己的話">${saved}</textarea>
-        <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveEdit()">儲存修改</button>
+        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="saveEdit()">儲存修改</button>
+          <button class="btn btn-ghost btn-sm" onclick="sendToVp()">🔮 送到區塊 3 · 流量分析</button>
+        </div>
       </div>`;
   }catch(e){
-    id('detail-body').innerHTML+=`<div class="card"><div style="color:#ef4444;font-size:.85rem">腳本生成失敗：${e.message}</div><button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openAIDetail(${idx})">重試</button></div>`;
+    id('detail-body').innerHTML+=`<div class="card"><div style="color:#ef4444;font-size:.85rem">腳本生成失敗：${e.message}</div><button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="retryDetail()">重試</button></div>`;
   }
 }
 
@@ -772,11 +864,340 @@ async function saveEdit(){
   const ok=id('save-ok');ok.classList.add('show');setTimeout(()=>ok.classList.remove('show'),2500);
 }
 
+// 區塊2 → 區塊3：帶著文稿跳到流量預測頁
+function sendToVp(){
+  const edited=id('edit-area')?.value.trim();
+  vpDraft={
+    title:_lastScript?.title||'',
+    script:edited||_lastScript?.script||'',
+    original_script:_lastScript?.script||''
+  };
+  if(!vpDraft.script){toast('沒有可分析的文稿',true);return;}
+  closeDetail();
+  showPage('vp');
+}
+
+// ─── PAGE: 流量預測（區塊 3/4/5）───
+function vpPostOptions(needScript=false){
+  const list=vpPosts.filter(p=>!needScript||p.script_raw);
+  if(!list.length) return '<option value="">（尚無記錄，請先在區塊 3 分析一篇文稿）</option>';
+  return list.map(p=>`<option value="${p.id}">${esc((p.title||'未命名').slice(0,24))} · ${new Date(p.created_at).getMonth()+1}/${new Date(p.created_at).getDate()}</option>`).join('');
+}
+
+function renderVp(){
+  const el=id('page-vp');
+  const um=vpUserModel||{bias:0,samples:0,notes:[]};
+  const bm=vpBaseModel||{};
+  el.innerHTML=`
+    <div class="card">
+      <div class="blk-badge">區塊 3 · 修正文稿 × 流量模型分析</div>
+      <h2>🔮 文稿流量預測</h2>
+      <p class="sub">貼上你修正後的文稿，AI 依流量模型＋你的個人校準模型，預測表現並告訴你怎麼改能增加流量</p>
+      <div class="form-group"><label>標題 / Hook</label><input id="vp3-title" value="${esc(vpDraft?.title||'')}"></div>
+      <div class="form-group"><label>修正後文稿</label><textarea class="ea" id="vp3-script" style="min-height:140px" placeholder="貼上你的口播文稿…">${esc(vpDraft?.script||'')}</textarea></div>
+      <button class="btn btn-primary btn-sm" id="vp3-btn" onclick="runVpScript()">🔮 AI 流量分析（${AI_COST} 點）</button>
+      <div id="vp3-result"></div>
+    </div>
+
+    <div class="card">
+      <div class="blk-badge">區塊 4 · 影片 × 文稿節奏預測</div>
+      <h2>🎬 影片流量預測</h2>
+      <p class="sub">選擇已分析的文稿、放上拍好的影片，依影片長度與文稿節奏計算可能的流量結果</p>
+      <div class="form-group"><label>對應文稿</label><select id="vp4-post">${vpPostOptions(true)}</select></div>
+      <input type="file" accept="video/*" class="vp-file" id="vp4-video" onchange="vp4FileChange(event)">
+      <div id="vp4-info" style="font-size:.8rem;color:var(--muted);margin-bottom:10px"></div>
+      <button class="btn btn-primary btn-sm" id="vp4-btn" onclick="runVpVideo()">🎬 影片流量預測（${AI_COST} 點）</button>
+      <div id="vp4-result"></div>
+    </div>
+
+    <div class="card">
+      <div class="blk-badge">區塊 5 · IG 真實流量回填 × 模型校準</div>
+      <h2>📥 流量回填</h2>
+      <p class="sub">上架約 24 小時後，截圖 IG 洞察數據上傳。AI 判讀後對照預測、計算誤差，並更新你的個人模型（越用越準）</p>
+      <div class="form-group"><label>對應貼文</label><select id="vp5-post">${vpPostOptions()}</select></div>
+      <label style="font-size:.78rem;color:var(--muted)">① 數據摘要截圖（觀看/觸及/讚/留言/分享/收藏）</label>
+      <input type="file" accept="image/*" class="vp-file" id="vp5-img1">
+      <label style="font-size:.78rem;color:var(--muted)">② 留存曲線截圖（可選）</label>
+      <input type="file" accept="image/*" class="vp-file" id="vp5-img2">
+      <button class="btn btn-primary btn-sm" id="vp5-btn" onclick="runVpActuals()">📥 判讀並校準模型（${AI_COST} 點）</button>
+      <div id="vp5-result"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">🧠 我的模型</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">個人模型只屬於這個帳號、彼此不干擾；基礎模型是全體共用的原系統設計。</div>
+      <div class="grid2">
+        <div class="info-box"><div class="lb">校準樣本數</div><div class="vl" style="color:var(--accent)">${um.samples||0}</div></div>
+        <div class="info-box"><div class="lb">預測偏差修正 bias</div><div class="vl">${um.bias>0?'+':''}${um.bias||0}</div></div>
+      </div>
+      ${(um.notes||[]).length?`<div class="divider"></div><div class="section-title">帳號專屬洞察</div>${um.notes.map(x=>`<div class="vp-sug">${esc(x)}</div>`).join('')}`:''}
+      <div class="divider"></div>
+      <div class="section-title">📚 基礎模型（共用）</div>
+      ${(bm.principles||[]).map(x=>`<div style="font-size:.8rem;color:var(--muted);padding:3px 0">· ${esc(x)}</div>`).join('')}
+      ${(bm.common_insights||[]).length?`<div style="margin-top:8px;font-size:.78rem;color:var(--accent);font-weight:600">跨帳號共通洞察</div>${bm.common_insights.map(x=>`<div style="font-size:.8rem;padding:3px 0">· ${esc(x)}</div>`).join('')}`:''}
+    </div>`;
+}
+
+function vpVerdictClass(vd){
+  if(/保留/.test(vd)) return 'vd-keep';
+  if(/重做/.test(vd)) return 'vd-redo';
+  return 'vd-fix';
+}
+function vpScoreBlock(score,label){
+  return `<div class="vp-score"><div class="num">${Math.round(score||0)}</div><div><div style="font-weight:700">${label}</div><div class="lb2">0–100，已套用你的個人模型校準</div></div></div>`;
+}
+function vpSuggestions(list){
+  return (list||[]).map(s=>`<div class="vp-sug"><b>優先 ${s.priority}</b>：${esc(s.change)}${s.expected_gain?`<div style="font-size:.74rem;color:var(--green);margin-top:2px">↑ ${esc(s.expected_gain)}</div>`:''}</div>`).join('');
+}
+
+// ── 區塊3 執行 ──
+async function runVpScript(){
+  const title=v('vp3-title'), script=id('vp3-script').value.trim();
+  if(!script){toast('請貼上文稿',true);return;}
+  if(!await spendPoints()) return;
+  const btn=id('vp3-btn');btn.disabled=true;btn.textContent='🔮 AI 分析中…';
+  id('vp3-result').innerHTML='<div style="color:var(--muted);font-size:.82rem;padding:12px 0">AI 正在逐句分析文稿…</div>';
+  try{
+    const{data,error}=await sb.functions.invoke('vp-engine',{body:{
+      action:'predict_script', title, script,
+      original_script:vpDraft?.original_script||'',
+      niche:userProfile?.niche||'', target_audience:userProfile?.target_audience||'',
+      base_model:vpBaseModel, user_model:vpUserModel
+    }});
+    if(error) throw new Error(error.message);
+    if(data.error) throw new Error(data.error);
+    // 存 vp_posts + 分析 + 預測
+    const{data:post,error:pe}=await sb.from('vp_posts').insert({
+      user_id:currentUser.id, title, script_raw:script, status:'scored'
+    }).select().single();
+    if(pe) throw new Error(pe.message);
+    await sb.from('vp_script_analysis').insert({
+      post_id:post.id, user_id:currentUser.id,
+      hook_score:data.hook_score, overall_script_score:data.predicted_score,
+      sentences:data.sentences||[], emotion_arc:data.emotion_arc||[],
+      predicted_drop_points:data.drop_points||[], suggestions:data.suggestions||[],
+      model:'vp-engine'
+    });
+    await sb.from('vp_predictions').insert({
+      post_id:post.id, user_id:currentUser.id, stage:'A_script',
+      predicted_score:data.predicted_score, fusion_result:data.sentences||[]
+    });
+    vpPosts.unshift(post);
+    vpDraft=null;
+    id('vp3-result').innerHTML=`
+      ${vpScoreBlock(data.predicted_score,'預測流量分')}
+      <div style="font-size:.84rem;line-height:1.7;margin-bottom:10px">${esc(data.summary)}</div>
+      <div class="section-title">逐句診斷（Hook 分 ${Math.round(data.hook_score||0)}）</div>
+      ${(data.sentences||[]).map(s=>`<div class="vp-seg">
+        <span class="vp-verdict ${s.risk_flag?'vd-redo':s.strength==='強'?'vd-keep':'vd-fix'}">${esc(s.function)}·${esc(s.strength)}</span>
+        <div><div>${esc(s.text)}</div>${s.note?`<div style="font-size:.72rem;color:var(--muted)">${esc(s.note)}</div>`:''}</div>
+      </div>`).join('')}
+      <div class="section-title" style="margin-top:14px">怎麼改能增加流量</div>
+      ${vpSuggestions(data.suggestions)}
+      <div style="font-size:.74rem;color:var(--muted);margin-top:8px">已存入記錄，可到區塊 4 放影片、區塊 5 回填真實流量。</div>`;
+    // 更新區塊4/5 的下拉
+    id('vp4-post').innerHTML=vpPostOptions(true);
+    id('vp5-post').innerHTML=vpPostOptions();
+    toast('文稿分析完成 ✓');
+  }catch(e){
+    id('vp3-result').innerHTML=`<div style="color:#ef4444;font-size:.84rem;padding:10px 0">分析失敗：${esc(e.message)}</div>`;
+  }finally{
+    btn.disabled=false;btn.textContent=`🔮 AI 流量分析（${AI_COST} 點）`;
+  }
+}
+
+// ── 區塊4 執行 ──
+function vp4FileChange(ev){
+  const f=ev.target.files[0];
+  if(!f){_vp4=null;id('vp4-info').textContent='';return;}
+  const u=URL.createObjectURL(f);
+  const vd=document.createElement('video');
+  vd.preload='metadata';
+  vd.onloadedmetadata=()=>{
+    _vp4={file:f,duration:Math.max(1,Math.round(vd.duration))};
+    URL.revokeObjectURL(u);
+    id('vp4-info').textContent=`已選影片：${f.name} · ${_vp4.duration} 秒`;
+  };
+  vd.onerror=()=>{URL.revokeObjectURL(u);toast('無法讀取影片',true);};
+  vd.src=u;
+}
+async function runVpVideo(){
+  const postId=v('vp4-post');
+  const post=vpPosts.find(p=>p.id===postId);
+  if(!post?.script_raw){toast('請先在區塊 3 分析一篇文稿',true);return;}
+  if(!_vp4){toast('請先選擇影片檔',true);return;}
+  if(!await spendPoints()) return;
+  const btn=id('vp4-btn');btn.disabled=true;btn.textContent='🎬 計算中…';
+  id('vp4-result').innerHTML='<div style="color:var(--muted);font-size:.82rem;padding:12px 0">AI 正在依影片長度與文稿節奏計算…</div>';
+  try{
+    const chars=post.script_raw.replace(/\s/g,'').length;
+    const cps=Math.round(chars/_vp4.duration*10)/10;
+    const{data,error}=await sb.functions.invoke('vp-engine',{body:{
+      action:'predict_video', title:post.title, script:post.script_raw,
+      duration_sec:_vp4.duration, char_count:chars, pace_cps:cps,
+      base_model:vpBaseModel, user_model:vpUserModel
+    }});
+    if(error) throw new Error(error.message);
+    if(data.error) throw new Error(data.error);
+    await sb.from('vp_visual_scores').insert({
+      post_id:post.id, user_id:currentUser.id,
+      virality_score:data.predicted_score, hook_strength:data.hook_strength,
+      attention_curve:data.attention_estimate||[], drop_points:data.fusion||[],
+      tool:'vp-engine-pace'
+    });
+    await sb.from('vp_predictions').insert({
+      post_id:post.id, user_id:currentUser.id, stage:'B_visual',
+      predicted_score:data.predicted_score, fusion_result:data.fusion||[]
+    });
+    await sb.from('vp_posts').update({video_name:_vp4.file.name,duration_sec:_vp4.duration,status:'scored',updated_at:new Date().toISOString()}).eq('id',post.id);
+    id('vp4-result').innerHTML=`
+      ${vpScoreBlock(data.predicted_score,'影片預測流量分')}
+      <div style="font-size:.84rem;line-height:1.7;margin-bottom:6px">${esc(data.summary)}</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:10px">語速 ${data.pacing?.cps??'?'} 字/秒 · ${esc(data.pacing?.verdict||'')} ${esc(data.pacing?.note||'')}</div>
+      <div class="section-title">四象限逐段診斷（文稿 × 節奏）</div>
+      ${(data.fusion||[]).map(f=>`<div class="vp-seg">
+        <span class="vp-verdict ${vpVerdictClass(f.verdict)}">${esc(f.verdict)}</span>
+        <div><div style="font-size:.74rem;color:var(--muted)">${f.start_sec}–${f.end_sec}s · 文稿${esc(f.script_state)} × 節奏${esc(f.visual_state)}</div><div>${esc(f.action)}</div></div>
+      </div>`).join('')}
+      <div class="section-title" style="margin-top:14px">修改建議</div>
+      ${vpSuggestions(data.suggestions)}`;
+    toast('影片預測完成 ✓');
+  }catch(e){
+    id('vp4-result').innerHTML=`<div style="color:#ef4444;font-size:.84rem;padding:10px 0">預測失敗：${esc(e.message)}</div>`;
+  }finally{
+    btn.disabled=false;btn.textContent=`🎬 影片流量預測（${AI_COST} 點）`;
+  }
+}
+
+// ── 區塊5 執行 ──
+async function runVpActuals(){
+  const postId=v('vp5-post');
+  const post=vpPosts.find(p=>p.id===postId);
+  if(!post){toast('請選擇對應貼文',true);return;}
+  const f1=id('vp5-img1').files[0], f2=id('vp5-img2').files[0];
+  if(!f1){toast('請上傳數據摘要截圖',true);return;}
+  if(!await spendPoints()) return;
+  const btn=id('vp5-btn');btn.disabled=true;btn.textContent='📥 判讀中…';
+  id('vp5-result').innerHTML='<div style="color:var(--muted);font-size:.82rem;padding:12px 0">AI 正在判讀截圖並校準模型…</div>';
+  try{
+    const images=[{media_type:f1.type||'image/png',data:await fileToB64(f1)}];
+    if(f2) images.push({media_type:f2.type||'image/png',data:await fileToB64(f2)});
+    const{data:preds}=await sb.from('vp_predictions').select('*').eq('post_id',post.id);
+    const{data,error}=await sb.functions.invoke('vp-engine',{body:{
+      action:'ingest_actuals', images,
+      post:{title:post.title,duration_sec:post.duration_sec},
+      predictions:(preds||[]).map(p=>({stage:p.stage,predicted_score:p.predicted_score})),
+      base_model:vpBaseModel, user_model:vpUserModel
+    }});
+    if(error) throw new Error(error.message);
+    if(data.error) throw new Error(data.error);
+    const m=data.metrics||{};
+    await sb.from('vp_actuals').insert({
+      post_id:post.id, user_id:currentUser.id, source:'ig',
+      views:m.views, reach:m.reach, likes:m.likes, comments:m.comments,
+      shares:m.shares, saves:m.saves, avg_watch_sec:m.avg_watch_sec,
+      retention_curve:data.retention_curve||[], raw:data
+    });
+    // 回填各階段誤差
+    for(const ps of (data.per_stage||[])){
+      const row=(preds||[]).find(p=>p.stage===ps.stage);
+      if(row) await sb.from('vp_predictions').update({
+        actual_score:data.actual_score, error:ps.error, calibrated_at:new Date().toISOString()
+      }).eq('id',row.id);
+    }
+    // 更新個人模型（只影響此帳號）
+    const mu=data.model_update||{};
+    const newModel={
+      bias:typeof mu.bias==='number'?mu.bias:(vpUserModel.bias||0),
+      samples:(vpUserModel.samples||0)+1,
+      notes:[...(vpUserModel.notes||[]),...(mu.notes||[])].slice(-12)
+    };
+    await sb.from('vp_user_models').upsert({user_id:currentUser.id,model:newModel,updated_at:new Date().toISOString()});
+    vpUserModel=newModel;
+    await sb.from('vp_posts').update({status:'published',published_at:post.published_at||new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',post.id);
+    const mm=[['觀看',m.views],['觸及',m.reach],['讚',m.likes],['留言',m.comments],['分享',m.shares],['收藏',m.saves]];
+    id('vp5-result').innerHTML=`
+      ${vpScoreBlock(data.actual_score,'真實表現分（24hr）')}
+      <div class="grid2" style="margin-bottom:10px">${mm.map(([k,val])=>`<div class="info-box"><div class="lb">${k}</div><div class="vl">${val==null?'—':Number(val).toLocaleString()}</div></div>`).join('')}</div>
+      ${(data.per_stage||[]).map(p=>`<div style="font-size:.82rem;padding:3px 0">階段 ${esc(p.stage)}：預測 ${Math.round(p.predicted_score)} 分 → 誤差 ${p.error>0?'+':''}${Math.round(p.error)}</div>`).join('')}
+      <div class="section-title" style="margin-top:12px">個人模型已更新</div>
+      <div style="font-size:.82rem">bias ${newModel.bias>0?'+':''}${newModel.bias} · 樣本數 ${newModel.samples}</div>
+      ${(mu.notes||[]).map(x=>`<div class="vp-sug">${esc(x)}</div>`).join('')}
+      <div style="font-size:.84rem;line-height:1.7;margin-top:8px">${esc(data.summary)}</div>`;
+    toast('流量已回填，個人模型已校準 ✓');
+  }catch(e){
+    id('vp5-result').innerHTML=`<div style="color:#ef4444;font-size:.84rem;padding:10px 0">回填失敗：${esc(e.message)}</div>`;
+  }finally{
+    btn.disabled=false;btn.textContent=`📥 判讀並校準模型（${AI_COST} 點）`;
+  }
+}
+
+// ─── PAGE: 後臺（僅管理員）───
+async function renderAdmin(){
+  const el=id('page-admin');
+  if(!vpAccount?.is_admin){
+    el.innerHTML='<div class="card"><div class="empty">此頁僅限管理員使用</div></div>';
+    return;
+  }
+  el.innerHTML='<div class="card"><div class="empty">載入帳號中…</div></div>';
+  const{data:accts,error}=await sb.from('vp_accounts').select('*').order('created_at');
+  if(error){el.innerHTML=`<div class="card"><div style="color:#ef4444">載入失敗：${esc(error.message)}</div></div>`;return;}
+  el.innerHTML=`
+    <div class="card">
+      <h2>🛠️ 帳號與點數管理</h2>
+      <p class="sub">每個帳號基礎 ${60} 點；每次 AI 計算消耗 ${AI_COST} 點</p>
+      ${(accts||[]).map(a=>`<div class="adm-row" data-uid="${a.user_id}">
+        <span class="em">${esc(a.email||a.user_id.slice(0,8))}${a.is_admin?' <span class="tag tag-a" style="font-size:.65rem">管理員</span>':''}</span>
+        <input type="number" value="${a.points}" id="adm-pts-${a.user_id}">
+        <label style="font-size:.74rem;color:var(--muted)"><input type="checkbox" id="adm-act-${a.user_id}" ${a.is_active?'checked':''}> 啟用</label>
+        <button class="btn btn-ghost btn-sm" style="margin-top:0" onclick="adminSaveAccount('${a.user_id}')">儲存</button>
+      </div>`).join('')}
+    </div>
+    <div class="card">
+      <h2>🧬 模型交叉比對</h2>
+      <p class="sub">比對所有帳號的個人模型；共通的細節會寫進全體共用的基礎模型</p>
+      <button class="btn btn-primary btn-sm" id="adm-cross-btn" onclick="adminCrossCalibrate()">🧬 交叉比對並更新基礎模型（${AI_COST} 點）</button>
+      <div id="adm-cross-result"></div>
+      ${(vpBaseModel?.common_insights||[]).length?`<div class="divider"></div><div class="section-title">目前基礎模型的共通洞察</div>${vpBaseModel.common_insights.map(x=>`<div class="vp-sug">${esc(x)}</div>`).join('')}`:''}
+    </div>`;
+}
+
+async function adminSaveAccount(uid){
+  const pts=parseInt(id('adm-pts-'+uid).value)||0;
+  const act=id('adm-act-'+uid).checked;
+  const{error}=await sb.from('vp_accounts').update({points:pts,is_active:act}).eq('user_id',uid);
+  if(error){toast('儲存失敗：'+error.message,true);return;}
+  if(uid===currentUser.id){vpAccount.points=pts;updatePtsChip();}
+  toast('已更新 ✓');
+}
+
+async function adminCrossCalibrate(){
+  if(!await spendPoints()) return;
+  const btn=id('adm-cross-btn');btn.disabled=true;btn.textContent='🧬 比對中…';
+  id('adm-cross-result').innerHTML='<div style="color:var(--muted);font-size:.82rem;padding:10px 0">正在交叉比對所有帳號模型…</div>';
+  try{
+    const{data,error}=await sb.functions.invoke('vp-engine',{body:{action:'cross_calibrate'}});
+    if(error) throw new Error(error.message);
+    if(data.error) throw new Error(data.error);
+    // 重新載入基礎模型
+    const{data:base}=await sb.from('vp_base_model').select('*').eq('id',1).maybeSingle();
+    vpBaseModel=base?.model||vpBaseModel;
+    id('adm-cross-result').innerHTML=`
+      <div style="font-size:.84rem;line-height:1.7;margin:10px 0">${esc(data.summary)}</div>
+      <div style="font-size:.8rem;color:var(--muted)">比對帳號數：${data.compared_accounts||0} · 本次新增共通洞察：${(data.common_insights||[]).length} 條 · 基礎模型累計：${data.total_insights||0} 條</div>
+      ${(data.common_insights||[]).map(x=>`<div class="vp-sug">${esc(x)}</div>`).join('')}`;
+    toast(data.updated?'基礎模型已更新 ✓':'比對完成，暫無新的共通洞察');
+  }catch(e){
+    id('adm-cross-result').innerHTML=`<div style="color:#ef4444;font-size:.84rem;padding:10px 0">比對失敗：${esc(e.message)}</div>`;
+  }finally{
+    btn.disabled=false;btn.textContent=`🧬 交叉比對並更新基礎模型（${AI_COST} 點）`;
+  }
+}
+
 // ─── PAGE 3: ADVICE ───
 function renderAdvice(){
   const el=id('page-advice');
   el.innerHTML=`
-    ${buildFBConnectCard()}
     <div class="card">
       <h2>📊 新增流量數據</h2><p class="sub">記錄後系統分析帳號表現並給出建議</p>
       <div class="perf-form">
@@ -794,211 +1215,6 @@ function renderAdvice(){
     </div>
     ${buildAdvice()}
     <div class="card"><h2>📋 近期記錄</h2><p class="sub"></p>${buildPerfHistory()}</div>`;
-}
-
-// ─── FB GRAPH API INTEGRATION ───
-function buildFBConnectCard(){
-  const s=fbState();
-  const connected=s.uid&&s.token;
-  if(connected) return`
-    <div class="fb-card">
-      <h3>🔗 IG 數據自動同步</h3>
-      <p class="sub">透過 Facebook Graph API 取得真實貼文數據</p>
-      <div class="fb-connected">
-        <span class="fb-badge">✅ 已連結 @${s.name||s.uid}</span>
-      </div>
-      <div class="fb-actions">
-        <button class="btn btn-primary btn-sm" id="fb-sync-btn" onclick="fbSyncPosts()">同步最近 10 篇貼文</button>
-        <button class="btn btn-ghost btn-sm" onclick="fbDisconnect()">中斷連結</button>
-      </div>
-      <div id="sync-preview"></div>
-    </div>`;
-
-  return`
-    <div class="fb-card">
-      <h3>🔗 IG 數據自動同步</h3>
-      <p class="sub">連結你的 Instagram 商業帳號，一鍵取得真實的觀看數、收藏、分享數據</p>
-      <div style="font-size:.82rem;color:var(--muted);margin-bottom:14px">
-        需要：IG 商業帳號或創作者帳號，且已在 IG 設定中連結到 Facebook 粉絲專頁
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="fbStartOAuth()">連結 Instagram 帳號</button>
-    </div>`;
-}
-
-function fbStartOAuth(){
-  const state='fb_'+Math.random().toString(36).substr(2,9);
-  sessionStorage.setItem('fb_oauth_state',state);
-  const params=new URLSearchParams({
-    client_id: FB_APP_ID,
-    redirect_uri: 'https://ptgaminglife.github.io/IGagent/',
-    response_type: 'token',
-    state: state
-  });
-  // Business-type apps use Facebook Login for Business: requires config_id, scope is rejected
-  if(FB_CONFIG_ID) params.set('config_id',FB_CONFIG_ID);
-  else params.set('scope','pages_show_list,pages_read_engagement,instagram_basic,instagram_manage_insights');
-  location.href=`https://www.facebook.com/v22.0/dialog/oauth?${params.toString()}`;
-}
-
-async function fbGetIGAccount(userToken){
-  const msg=id('fb-connect-msg');
-  try{
-    // Step 1: get FB pages (page token has more permissions than user token)
-    const r=await fetch(`https://graph.facebook.com/v22.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userToken}`);
-    const d=await r.json();
-    if(d.error) throw new Error(d.error.message);
-    const page=(d.data||[]).find(p=>p.instagram_business_account);
-    if(!page) throw new Error('找不到連結 IG 的粉絲專頁。請確認你的 IG 帳號已在「Instagram 設定 → 帳號 → 連結的帳號」連結到 Facebook 粉絲專頁');
-
-    // Step 2: get IG username
-    const igId=page.instagram_business_account.id;
-    const r2=await fetch(`https://graph.facebook.com/v22.0/${igId}?fields=username,followers_count&access_token=${page.access_token}`);
-    const ig=await r2.json();
-    if(ig.error) throw new Error(ig.error.message);
-
-    localStorage.setItem('ig_fb_page_token',page.access_token);
-    localStorage.setItem('ig_fb_ig_uid',igId);
-    localStorage.setItem('ig_fb_ig_name',ig.username||igId);
-
-    toast('成功連結 @'+(ig.username||igId)+' ✓');
-    renderAdvice();
-  }catch(e){
-    if(msg) msg.textContent='';
-    toast('連結失敗：'+e.message,true);
-    console.error(e);
-  }
-}
-
-async function fbSyncPosts(){
-  const s=fbState();
-  if(!s.token||!s.uid){toast('請先連結 IG 帳號',true);return;}
-  const btn=id('fb-sync-btn');
-  if(btn){btn.disabled=true;btn.textContent='同步中…';}
-  const preview=id('sync-preview');
-  if(preview) preview.innerHTML='<div style="color:var(--muted);font-size:.82rem;padding:8px 0">正在從 Instagram Graph API 取得數據…</div>';
-
-  try{
-    // Fetch recent 10 media
-    const mUrl=`https://graph.facebook.com/v22.0/${s.uid}/media?fields=id,media_type,media_product_type,timestamp,like_count,comments_count&limit=10&access_token=${s.token}`;
-    const mr=await fetch(mUrl);
-    const md=await mr.json();
-    if(md.error){
-      if(md.error.code===190||md.error.type==='OAuthException'){fbTokenExpired();return;}
-      throw new Error(md.error.message);
-    }
-
-    const posts=md.data||[];
-    if(!posts.length){if(preview)preview.innerHTML='<div style="color:var(--muted);font-size:.82rem">沒有找到貼文數據</div>';return;}
-
-    // Fetch insights for each post
-    const synced=[];
-    for(const post of posts){
-      const isReel=post.media_product_type==='REELS';
-      const isStory=post.media_type==='STORY'||post.media_product_type==='STORY';
-      const isCarousel=post.media_type==='CAROUSEL_ALBUM';
-      const metrics=isReel?'plays,reach,saved,shares':isStory?'impressions,reach':'impressions,reach,saved,shares';
-
-      let views=0,saves=0,shares=0;
-      try{
-        const ir=await fetch(`https://graph.facebook.com/v22.0/${post.id}/insights?metric=${metrics}&period=lifetime&access_token=${s.token}`);
-        const ins=await ir.json();
-        if(!ins.error&&ins.data){
-          for(const m of ins.data){
-            const val=m.values?.[0]?.value||m.value||0;
-            if(m.name==='plays'||m.name==='impressions') views=val;
-            if(m.name==='saved') saves=val;
-            if(m.name==='shares') shares=val;
-          }
-        }
-      }catch(e){}
-
-      synced.push({
-        _media_id: post.id,
-        post_type: isReel?'Reel':isCarousel?'輪播':isStory?'限動':'單圖',
-        post_date: post.timestamp.split('T')[0],
-        views, likes:post.like_count||0, saves, shares,
-        dms:0, comments:post.comments_count||0,
-        notes:'FB Graph API 同步'
-      });
-    }
-
-    if(preview) preview.innerHTML=buildSyncPreview(synced);
-
-  }catch(e){
-    if(preview) preview.innerHTML='';
-    toast('同步失敗：'+e.message,true);
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='同步最近 10 篇貼文';}
-  }
-}
-
-function buildSyncPreview(posts){
-  const rows=posts.map((p,i)=>`
-    <div class="sync-item">
-      <div class="sync-item-check"><input type="checkbox" id="sc-${i}" checked style="width:16px;height:16px;cursor:pointer"></div>
-      <div class="sync-item-meta">
-        <div class="date">📅 ${p.post_date}</div>
-        <div class="type">${p.post_type}</div>
-      </div>
-      <div class="sync-item-nums">
-        ${[['觀看',p.views],['讚',p.likes],['收藏',p.saves],['分享',p.shares],['留言',p.comments]].map(([k,v])=>`
-          <div class="mn"><div class="mv">${(v||0).toLocaleString()}</div><div class="mk">${k}</div></div>`).join('')}
-      </div>
-    </div>`).join('');
-
-  const data=JSON.stringify(posts).replace(/"/g,'&quot;');
-  return`
-    <div class="sync-preview">
-      <h4>📋 同步預覽（共 ${posts.length} 篇，勾選要儲存的）</h4>
-      ${rows}
-      <div class="sync-save-bar">
-        <button class="btn btn-primary btn-sm" onclick="fbSavePosts(${posts.length})">儲存勾選的貼文數據</button>
-        <span style="font-size:.78rem;color:var(--muted)">DM 數需手動補充</span>
-      </div>
-    </div>`;
-}
-
-// posts count trick: read checkbox states and reconstruct from DOM
-async function fbSavePosts(count){
-  const toSave=[];
-  // Re-fetch from sync-preview checkboxes — items stored in DOM order
-  const items=document.querySelectorAll('.sync-item');
-  items.forEach((el,i)=>{
-    const cb=id('sc-'+i);
-    if(!cb||!cb.checked) return;
-    // Read metrics from the .mv spans
-    const mvs=[...el.querySelectorAll('.mv')];
-    const mks=[...el.querySelectorAll('.mk')];
-    const map={};mks.forEach((k,j)=>{map[k.textContent]=parseInt(mvs[j]?.textContent?.replace(/,/g,'')||'0');});
-    const date=el.querySelector('.date')?.textContent?.replace('📅 ','').trim();
-    const type=el.querySelector('.type')?.textContent?.trim();
-    toSave.push({
-      user_id:currentUser.id,
-      post_date:date,post_type:type,
-      views:map['觀看']||0,likes:map['讚']||0,saves:map['收藏']||0,
-      shares:map['分享']||0,dms:0,comments:map['留言']||0,
-      notes:'FB Graph API 同步'
-    });
-  });
-
-  if(!toSave.length){toast('請至少勾選一篇',true);return;}
-  const{error}=await sb.from('ig_performance').insert(toSave);
-  if(error){toast('儲存失敗：'+error.message,true);return;}
-  toSave.forEach(r=>perfData.unshift(r));
-  toast(`已儲存 ${toSave.length} 筆數據 ✓`);
-  renderAdvice();
-}
-
-function fbTokenExpired(){
-  localStorage.removeItem('ig_fb_page_token');
-  toast('FB 授權已過期，請重新連結',true);
-  renderAdvice();
-}
-
-function fbDisconnect(){
-  ['ig_fb_page_token','ig_fb_ig_uid','ig_fb_ig_name'].forEach(k=>localStorage.removeItem(k));
-  toast('已中斷 IG 連結');
-  renderAdvice();
 }
 
 function buildAdvice(){
