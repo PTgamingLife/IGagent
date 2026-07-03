@@ -135,6 +135,17 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .topic-hook{font-size:1rem;font-weight:600;line-height:1.5}
 .regen-btn{width:100%;padding:11px;background:transparent;border:1px dashed var(--border);border-radius:10px;color:var(--muted);cursor:pointer;font-size:.85rem;transition:all .15s;margin-top:4px}
 .regen-btn:hover{border-color:var(--accent);color:var(--accent)}
+.hist-head{display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}
+.hist-head .section-title{margin:0}
+.hist-clear{background:none;border:none;color:var(--muted);font-size:.74rem;cursor:pointer;padding:2px 4px}
+.hist-clear:hover{color:#ef4444}
+.hist-item{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;cursor:pointer;transition:border-color .15s;margin-bottom:8px}
+.hist-item:hover{border-color:var(--accent)}
+.hist-item .hi-main{flex:1;min-width:0}
+.hist-item .hi-hook{font-size:.88rem;font-weight:600;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-item .hi-meta{font-size:.7rem;color:var(--muted);margin-top:3px}
+.hist-item .hi-date{font-size:.7rem;color:var(--muted);flex-shrink:0}
+.hist-empty{color:var(--muted);font-size:.8rem;text-align:center;padding:16px 0}
 
 /* ── Detail overlay ── */
 #detail-overlay{display:none;position:fixed;inset:0;background:var(--bg);z-index:20;overflow-y:auto;padding:20px 16px 80px}
@@ -277,7 +288,7 @@ const sb = supabase.createClient(
   { auth: { flowType: 'implicit' } }
 );
 
-let currentUser=null, userProfile=null, styleRecords={}, perfData=[], currentTopicKey=null, aiTopics=null;
+let currentUser=null, userProfile=null, styleRecords={}, perfData=[], currentTopicKey=null, aiTopics=null, selectedTopics=[];
 
 // ─── FB INTEGRATION STATE ───
 const FB_APP_ID = '1497940802111247';
@@ -354,14 +365,16 @@ sb.auth.onAuthStateChange(async(event,session)=>{
 
 async function loadData(){
   const uid=currentUser.id;
-  const[{data:prof},{data:sty},{data:perf}]=await Promise.all([
+  const[{data:prof},{data:sty},{data:perf},{data:sel}]=await Promise.all([
     sb.from('ig_profiles').select('*').eq('user_id',uid).single(),
     sb.from('ig_style_records').select('*').eq('user_id',uid),
-    sb.from('ig_performance').select('*').eq('user_id',uid).order('post_date',{ascending:false}).limit(30)
+    sb.from('ig_performance').select('*').eq('user_id',uid).order('post_date',{ascending:false}).limit(30),
+    sb.from('ig_selected_topics').select('*').eq('user_id',uid).order('selected_at',{ascending:false}).limit(30)
   ]);
   userProfile=prof;
   styleRecords={};(sty||[]).forEach(r=>{styleRecords[r.topic_key]=r.edited_text;});
   perfData=perf||[];
+  selectedTopics=sel||[];
   if(prof?.ig_handle) id('top-handle').textContent='@'+prof.ig_handle;
 }
 
@@ -663,7 +676,8 @@ function renderTopics(){
           <div class="topic-hook">${t.hook}</div>
           <div style="font-size:.72rem;color:var(--muted);margin-top:6px">💡 ${t.why}</div>
         </div>`).join('')}
-      <button class="regen-btn" onclick="genAITopics()">✨ 重新 AI 生成</button>`;
+      <button class="regen-btn" onclick="genAITopics()">✨ 重新 AI 生成</button>
+      ${selectedTopicsSection()}`;
     return;
   }
   el.innerHTML=`
@@ -672,6 +686,56 @@ function renderTopics(){
       <div style="color:var(--muted);font-size:.88rem">正在為你生成今日主題…</div>
     </div>`;
   genAITopics();
+}
+
+// ── 已選主題紀錄 ──
+function selectedTopicsSection(){
+  const items=selectedTopics.length
+    ? selectedTopics.map((h,i)=>{
+        const d=h.selected_at?new Date(h.selected_at):null;
+        const ds=d?`${d.getMonth()+1}/${d.getDate()}`:'';
+        const meta=[h.theme,h.style,h.format].filter(Boolean).join(' · ');
+        return `<div class="hist-item" onclick="openHistoryTopic(${i})">
+          <div class="hi-main">
+            <div class="hi-hook">${h.hook||'（無標題）'}</div>
+            ${meta?`<div class="hi-meta">${meta}</div>`:''}
+          </div>
+          <div class="hi-date">${ds}</div>
+        </div>`;
+      }).join('')
+    : `<div class="hist-empty">尚無紀錄，點開任一主題後就會出現在這裡</div>`;
+  return `
+    <div class="hist-head">
+      <div class="section-title">📌 已選主題紀錄</div>
+      ${selectedTopics.length?`<button class="hist-clear" onclick="clearSelectedTopics()">清除紀錄</button>`:''}
+    </div>
+    ${items}`;
+}
+
+// Record a topic as "selected" (dedupe by hook, newest first).
+async function recordSelectedTopic(t){
+  if(!t||!t.hook||!currentUser) return;
+  selectedTopics=selectedTopics.filter(x=>x.hook!==t.hook);
+  selectedTopics.unshift({hook:t.hook,theme:t.theme,style:t.style,format:t.format,selected_at:new Date().toISOString()});
+  if(selectedTopics.length>30) selectedTopics=selectedTopics.slice(0,30);
+  try{
+    await sb.from('ig_selected_topics').delete().eq('user_id',currentUser.id).eq('hook',t.hook);
+    await sb.from('ig_selected_topics').insert({user_id:currentUser.id,hook:t.hook,theme:t.theme||null,style:t.style||null,format:t.format||null});
+  }catch{}
+}
+
+function openHistoryTopic(i){
+  const h=selectedTopics[i];
+  if(!h) return;
+  openTopicDetail({hook:h.hook,theme:h.theme,style:h.style,format:h.format},'hist_'+i);
+}
+
+async function clearSelectedTopics(){
+  if(!currentUser) return;
+  if(!confirm('確定要清除全部已選主題紀錄嗎？')) return;
+  selectedTopics=[];
+  try{await sb.from('ig_selected_topics').delete().eq('user_id',currentUser.id);}catch{}
+  renderTopics();
 }
 
 async function genAITopics(){
@@ -711,7 +775,16 @@ async function genAITopics(){
 
 async function openAIDetail(idx){
   const t=aiTopics[idx];
-  currentTopicKey='ai_'+idx;
+  recordSelectedTopic(t);
+  openTopicDetail(t,'ai_'+idx);
+}
+
+let _lastDetail=null;
+function retryDetail(){ if(_lastDetail) openTopicDetail(_lastDetail.t,_lastDetail.key); }
+
+async function openTopicDetail(t,key){
+  _lastDetail={t,key};
+  currentTopicKey=key;
   const saved=styleRecords[currentTopicKey]||'';
   const tagRow=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
     <span class="tag tag-a">✨ ${t.theme}</span>
@@ -755,7 +828,7 @@ async function openAIDetail(idx){
         <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="saveEdit()">儲存修改</button>
       </div>`;
   }catch(e){
-    id('detail-body').innerHTML+=`<div class="card"><div style="color:#ef4444;font-size:.85rem">腳本生成失敗：${e.message}</div><button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="openAIDetail(${idx})">重試</button></div>`;
+    id('detail-body').innerHTML+=`<div class="card"><div style="color:#ef4444;font-size:.85rem">腳本生成失敗：${e.message}</div><button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="retryDetail()">重試</button></div>`;
   }
 }
 
