@@ -84,33 +84,6 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
 .score-src-badge{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .score-src-badge span{background:#2a2a3e;border-radius:20px;padding:2px 10px;font-size:.72rem;color:var(--muted)}
 
-/* ── FB Sync ── */
-.fb-card{border:1px solid #3a3560;border-radius:var(--radius);padding:18px;margin-bottom:14px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%)}
-.fb-card h3{font-size:.95rem;font-weight:700;margin-bottom:4px;color:#a78bfa}
-.fb-card .sub{font-size:.8rem;color:var(--muted);margin-bottom:14px}
-.fb-steps{counter-reset:step;margin-bottom:14px}
-.fb-steps li{counter-increment:step;font-size:.82rem;color:var(--text);margin-bottom:6px;padding-left:28px;position:relative;list-style:none;line-height:1.5}
-.fb-steps li::before{content:counter(step);position:absolute;left:0;top:0;width:20px;height:20px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;color:#fff}
-.fb-steps li a{color:var(--accent);text-decoration:underline}
-.fb-steps li code{background:#2a2a3e;padding:1px 6px;border-radius:4px;font-size:.78rem;font-family:monospace;color:var(--accent2)}
-.fb-connected{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.fb-badge{background:#2a2a3e;border-radius:20px;padding:4px 12px;font-size:.82rem;color:var(--green);font-weight:600;border:1px solid var(--green)}
-.fb-actions{display:flex;gap:8px;flex-wrap:wrap}
-.sync-preview{margin-top:14px}
-.sync-preview h4{font-size:.85rem;font-weight:700;margin-bottom:8px;color:var(--muted)}
-.sync-item{background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.sync-item-check{flex-shrink:0}
-.sync-item-meta{flex:1;min-width:120px}
-.sync-item-meta .date{font-size:.8rem;color:var(--muted)}
-.sync-item-meta .type{font-size:.78rem;background:#2a2a3e;border-radius:12px;padding:1px 8px;display:inline-block;margin-top:2px}
-.sync-item-nums{display:flex;gap:10px;flex-wrap:wrap}
-.sync-item-nums .mn{text-align:center}
-.sync-item-nums .mv{font-size:.88rem;font-weight:700}
-.sync-item-nums .mk{font-size:.7rem;color:var(--muted)}
-.sync-save-bar{margin-top:10px;display:flex;gap:8px;align-items:center}
-.fb-token-input{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
-.fb-token-input input{flex:1;min-width:160px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-size:.88rem;font-family:inherit}
-.fb-token-input input:focus{outline:none;border-color:var(--accent)}
 .info-box{background:var(--surface2);border-radius:10px;padding:12px}
 .info-box .lb{font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
 .info-box .vl{font-size:.9rem;line-height:1.5}
@@ -265,22 +238,6 @@ const id=x=>document.getElementById(x);
 const v=x=>id(x)?.value.trim()||'';
 const n=x=>parseInt(id(x)?.value)||0;
 
-// ─── CAPTURE FB OAUTH TOKEN BEFORE SUPABASE INIT ───
-// Must run before supabase.createClient() so Supabase doesn't misread
-// Facebook's access_token from the hash as a Supabase session.
-(function(){
-  try{
-    const p=new URLSearchParams(location.hash.replace('#',''));
-    const st=sessionStorage.getItem('fb_oauth_state');
-    // Facebook hash: has access_token + matching state, but NO "type" param (Supabase-specific)
-    if(st&&p.get('state')===st&&p.has('access_token')&&!p.has('type')){
-      sessionStorage.removeItem('fb_oauth_state');
-      sessionStorage.setItem('fb_pending_token',p.get('access_token'));
-      history.replaceState({},'',location.pathname+location.search);
-    }
-  }catch(e){}
-})();
-
 // ─── SUPABASE ───
 const sb = supabase.createClient(
   'https://hhcubvixldieuwdeqnwc.supabase.co',
@@ -289,20 +246,6 @@ const sb = supabase.createClient(
 );
 
 let currentUser=null, userProfile=null, styleRecords={}, perfData=[], currentTopicKey=null, aiTopics=null, selectedTopics=[];
-
-// ─── FB INTEGRATION STATE ───
-const FB_APP_ID = '1497940802111247';
-// Facebook Login for Business configuration ID (required for Business-type apps).
-// Create at: App Dashboard → Facebook Login for Business → Configurations
-const FB_CONFIG_ID = '';
-function fbState(){
-  return{
-    appId:   FB_APP_ID,
-    token:   localStorage.getItem('ig_fb_page_token')||'',
-    uid:     localStorage.getItem('ig_fb_ig_uid')||'',
-    name:    localStorage.getItem('ig_fb_ig_name')||'',
-  };
-}
 
 // ─── AUTH ───
 async function doGoogleLogin(){
@@ -343,17 +286,11 @@ async function showApp(user){
 }
 
 // Auth state listener
-// INITIAL_SESSION: fires on every page load (handles persisted sessions + FB OAuth return)
+// INITIAL_SESSION: fires on every page load (handles persisted sessions)
 // SIGNED_IN: fires after Google OAuth redirect
 sb.auth.onAuthStateChange(async(event,session)=>{
   if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session?.user&&!currentUser){
     await showApp(session.user);
-    // Process pending FB OAuth token (captured from hash before Supabase init)
-    const fbPending=sessionStorage.getItem('fb_pending_token');
-    if(fbPending){
-      sessionStorage.removeItem('fb_pending_token');
-      fbGetIGAccount(fbPending);
-    }
   } else if(event==='INITIAL_SESSION'&&!session?.user){
     id('loading-screen').style.display='none';
     id('auth-screen').style.display='flex';
@@ -849,7 +786,6 @@ async function saveEdit(){
 function renderAdvice(){
   const el=id('page-advice');
   el.innerHTML=`
-    ${buildFBConnectCard()}
     <div class="card">
       <h2>📊 新增流量數據</h2><p class="sub">記錄後系統分析帳號表現並給出建議</p>
       <div class="perf-form">
@@ -867,211 +803,6 @@ function renderAdvice(){
     </div>
     ${buildAdvice()}
     <div class="card"><h2>📋 近期記錄</h2><p class="sub"></p>${buildPerfHistory()}</div>`;
-}
-
-// ─── FB GRAPH API INTEGRATION ───
-function buildFBConnectCard(){
-  const s=fbState();
-  const connected=s.uid&&s.token;
-  if(connected) return`
-    <div class="fb-card">
-      <h3>🔗 IG 數據自動同步</h3>
-      <p class="sub">透過 Facebook Graph API 取得真實貼文數據</p>
-      <div class="fb-connected">
-        <span class="fb-badge">✅ 已連結 @${s.name||s.uid}</span>
-      </div>
-      <div class="fb-actions">
-        <button class="btn btn-primary btn-sm" id="fb-sync-btn" onclick="fbSyncPosts()">同步最近 10 篇貼文</button>
-        <button class="btn btn-ghost btn-sm" onclick="fbDisconnect()">中斷連結</button>
-      </div>
-      <div id="sync-preview"></div>
-    </div>`;
-
-  return`
-    <div class="fb-card">
-      <h3>🔗 IG 數據自動同步</h3>
-      <p class="sub">連結你的 Instagram 商業帳號，一鍵取得真實的觀看數、收藏、分享數據</p>
-      <div style="font-size:.82rem;color:var(--muted);margin-bottom:14px">
-        需要：IG 商業帳號或創作者帳號，且已在 IG 設定中連結到 Facebook 粉絲專頁
-      </div>
-      <button class="btn btn-primary btn-sm" onclick="fbStartOAuth()">連結 Instagram 帳號</button>
-    </div>`;
-}
-
-function fbStartOAuth(){
-  const state='fb_'+Math.random().toString(36).substr(2,9);
-  sessionStorage.setItem('fb_oauth_state',state);
-  const params=new URLSearchParams({
-    client_id: FB_APP_ID,
-    redirect_uri: 'https://ptgaminglife.github.io/IGagent/',
-    response_type: 'token',
-    state: state
-  });
-  // Business-type apps use Facebook Login for Business: requires config_id, scope is rejected
-  if(FB_CONFIG_ID) params.set('config_id',FB_CONFIG_ID);
-  else params.set('scope','pages_show_list,pages_read_engagement,instagram_basic,instagram_manage_insights');
-  location.href=`https://www.facebook.com/v22.0/dialog/oauth?${params.toString()}`;
-}
-
-async function fbGetIGAccount(userToken){
-  const msg=id('fb-connect-msg');
-  try{
-    // Step 1: get FB pages (page token has more permissions than user token)
-    const r=await fetch(`https://graph.facebook.com/v22.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${userToken}`);
-    const d=await r.json();
-    if(d.error) throw new Error(d.error.message);
-    const page=(d.data||[]).find(p=>p.instagram_business_account);
-    if(!page) throw new Error('找不到連結 IG 的粉絲專頁。請確認你的 IG 帳號已在「Instagram 設定 → 帳號 → 連結的帳號」連結到 Facebook 粉絲專頁');
-
-    // Step 2: get IG username
-    const igId=page.instagram_business_account.id;
-    const r2=await fetch(`https://graph.facebook.com/v22.0/${igId}?fields=username,followers_count&access_token=${page.access_token}`);
-    const ig=await r2.json();
-    if(ig.error) throw new Error(ig.error.message);
-
-    localStorage.setItem('ig_fb_page_token',page.access_token);
-    localStorage.setItem('ig_fb_ig_uid',igId);
-    localStorage.setItem('ig_fb_ig_name',ig.username||igId);
-
-    toast('成功連結 @'+(ig.username||igId)+' ✓');
-    renderAdvice();
-  }catch(e){
-    if(msg) msg.textContent='';
-    toast('連結失敗：'+e.message,true);
-    console.error(e);
-  }
-}
-
-async function fbSyncPosts(){
-  const s=fbState();
-  if(!s.token||!s.uid){toast('請先連結 IG 帳號',true);return;}
-  const btn=id('fb-sync-btn');
-  if(btn){btn.disabled=true;btn.textContent='同步中…';}
-  const preview=id('sync-preview');
-  if(preview) preview.innerHTML='<div style="color:var(--muted);font-size:.82rem;padding:8px 0">正在從 Instagram Graph API 取得數據…</div>';
-
-  try{
-    // Fetch recent 10 media
-    const mUrl=`https://graph.facebook.com/v22.0/${s.uid}/media?fields=id,media_type,media_product_type,timestamp,like_count,comments_count&limit=10&access_token=${s.token}`;
-    const mr=await fetch(mUrl);
-    const md=await mr.json();
-    if(md.error){
-      if(md.error.code===190||md.error.type==='OAuthException'){fbTokenExpired();return;}
-      throw new Error(md.error.message);
-    }
-
-    const posts=md.data||[];
-    if(!posts.length){if(preview)preview.innerHTML='<div style="color:var(--muted);font-size:.82rem">沒有找到貼文數據</div>';return;}
-
-    // Fetch insights for each post
-    const synced=[];
-    for(const post of posts){
-      const isReel=post.media_product_type==='REELS';
-      const isStory=post.media_type==='STORY'||post.media_product_type==='STORY';
-      const isCarousel=post.media_type==='CAROUSEL_ALBUM';
-      const metrics=isReel?'plays,reach,saved,shares':isStory?'impressions,reach':'impressions,reach,saved,shares';
-
-      let views=0,saves=0,shares=0;
-      try{
-        const ir=await fetch(`https://graph.facebook.com/v22.0/${post.id}/insights?metric=${metrics}&period=lifetime&access_token=${s.token}`);
-        const ins=await ir.json();
-        if(!ins.error&&ins.data){
-          for(const m of ins.data){
-            const val=m.values?.[0]?.value||m.value||0;
-            if(m.name==='plays'||m.name==='impressions') views=val;
-            if(m.name==='saved') saves=val;
-            if(m.name==='shares') shares=val;
-          }
-        }
-      }catch(e){}
-
-      synced.push({
-        _media_id: post.id,
-        post_type: isReel?'Reel':isCarousel?'輪播':isStory?'限動':'單圖',
-        post_date: post.timestamp.split('T')[0],
-        views, likes:post.like_count||0, saves, shares,
-        dms:0, comments:post.comments_count||0,
-        notes:'FB Graph API 同步'
-      });
-    }
-
-    if(preview) preview.innerHTML=buildSyncPreview(synced);
-
-  }catch(e){
-    if(preview) preview.innerHTML='';
-    toast('同步失敗：'+e.message,true);
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='同步最近 10 篇貼文';}
-  }
-}
-
-function buildSyncPreview(posts){
-  const rows=posts.map((p,i)=>`
-    <div class="sync-item">
-      <div class="sync-item-check"><input type="checkbox" id="sc-${i}" checked style="width:16px;height:16px;cursor:pointer"></div>
-      <div class="sync-item-meta">
-        <div class="date">📅 ${p.post_date}</div>
-        <div class="type">${p.post_type}</div>
-      </div>
-      <div class="sync-item-nums">
-        ${[['觀看',p.views],['讚',p.likes],['收藏',p.saves],['分享',p.shares],['留言',p.comments]].map(([k,v])=>`
-          <div class="mn"><div class="mv">${(v||0).toLocaleString()}</div><div class="mk">${k}</div></div>`).join('')}
-      </div>
-    </div>`).join('');
-
-  const data=JSON.stringify(posts).replace(/"/g,'&quot;');
-  return`
-    <div class="sync-preview">
-      <h4>📋 同步預覽（共 ${posts.length} 篇，勾選要儲存的）</h4>
-      ${rows}
-      <div class="sync-save-bar">
-        <button class="btn btn-primary btn-sm" onclick="fbSavePosts(${posts.length})">儲存勾選的貼文數據</button>
-        <span style="font-size:.78rem;color:var(--muted)">DM 數需手動補充</span>
-      </div>
-    </div>`;
-}
-
-// posts count trick: read checkbox states and reconstruct from DOM
-async function fbSavePosts(count){
-  const toSave=[];
-  // Re-fetch from sync-preview checkboxes — items stored in DOM order
-  const items=document.querySelectorAll('.sync-item');
-  items.forEach((el,i)=>{
-    const cb=id('sc-'+i);
-    if(!cb||!cb.checked) return;
-    // Read metrics from the .mv spans
-    const mvs=[...el.querySelectorAll('.mv')];
-    const mks=[...el.querySelectorAll('.mk')];
-    const map={};mks.forEach((k,j)=>{map[k.textContent]=parseInt(mvs[j]?.textContent?.replace(/,/g,'')||'0');});
-    const date=el.querySelector('.date')?.textContent?.replace('📅 ','').trim();
-    const type=el.querySelector('.type')?.textContent?.trim();
-    toSave.push({
-      user_id:currentUser.id,
-      post_date:date,post_type:type,
-      views:map['觀看']||0,likes:map['讚']||0,saves:map['收藏']||0,
-      shares:map['分享']||0,dms:0,comments:map['留言']||0,
-      notes:'FB Graph API 同步'
-    });
-  });
-
-  if(!toSave.length){toast('請至少勾選一篇',true);return;}
-  const{error}=await sb.from('ig_performance').insert(toSave);
-  if(error){toast('儲存失敗：'+error.message,true);return;}
-  toSave.forEach(r=>perfData.unshift(r));
-  toast(`已儲存 ${toSave.length} 筆數據 ✓`);
-  renderAdvice();
-}
-
-function fbTokenExpired(){
-  localStorage.removeItem('ig_fb_page_token');
-  toast('FB 授權已過期，請重新連結',true);
-  renderAdvice();
-}
-
-function fbDisconnect(){
-  ['ig_fb_page_token','ig_fb_ig_uid','ig_fb_ig_name'].forEach(k=>localStorage.removeItem(k));
-  toast('已中斷 IG 連結');
-  renderAdvice();
 }
 
 function buildAdvice(){
